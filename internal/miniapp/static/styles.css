@@ -688,19 +688,18 @@ select:focus-visible {
 .admin-editor__grid { display: grid; gap: 10px; }
 .admin-editor__grid--two { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 .admin-editor__grid--three { grid-template-columns: repeat(3, minmax(0, 1fr)); }
-.admin-content-nav { width: 100%; min-width: 0; max-width: 100%; margin: -2px 0 2px; overflow: hidden; border-bottom: 1px solid var(--line); }
-.admin-content-groups { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); border-bottom: 1px solid var(--line-soft); }
-.admin-content-groups button { min-height: 40px; padding: 0 12px; position: relative; color: var(--muted); font-size: 11px; font-weight: 800; text-align: center; }
-.admin-content-groups button::after { position: absolute; right: 12px; bottom: -1px; left: 12px; height: 2px; background: transparent; content: ""; }
-.admin-content-groups button.is-active { color: var(--text); }
-.admin-content-groups button.is-active::after { background: var(--text); }
+.admin-content-nav { width: 100%; min-width: 0; max-width: 100%; display: grid; gap: 10px; margin: 0 0 4px; }
+.admin-content-groups { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 4px; padding: 4px; border: 1px solid var(--line); border-radius: 16px; background: var(--surface); }
+.admin-content-groups button { min-height: 44px; padding: 10px 12px; border: 1px solid transparent; border-radius: 12px; color: var(--muted); font-size: 12px; font-weight: 750; text-align: center; }
+.admin-content-groups button.is-active { color: var(--text); border-color: color-mix(in srgb, var(--accent) 40%, var(--line)); background: color-mix(in srgb, var(--accent) 10%, var(--surface)); }
 .admin-content-groups button:focus-visible { outline: 2px solid var(--text); outline-offset: -3px; }
-.admin-content-tabs { width: 100%; min-width: 0; max-width: 100%; padding: 8px 0 10px; display: flex; gap: 5px; overflow-x: auto; scrollbar-width: none; cursor: grab; user-select: none; overscroll-behavior-x: contain; scroll-snap-type: x proximity; }
-.admin-content-tabs.is-dragging { cursor: grabbing; }
-.admin-content-tabs::-webkit-scrollbar { display: none; }
-.admin-content-tabs button { min-height: 36px; padding: 0 10px; flex: 0 0 auto; scroll-snap-align: start; border: 1px solid transparent; border-radius: 5px; color: var(--muted); font-size: 10px; font-weight: 750; white-space: nowrap; }
-.admin-content-tabs button.is-active { border-color: var(--line); color: var(--text); background: var(--surface-soft); }
+.admin-content-tabs { width: 100%; min-width: 0; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
+.admin-content-tabs button { min-width: 0; min-height: 44px; padding: 10px; border: 1px solid var(--line-soft); border-radius: 12px; background: var(--surface); color: var(--muted); font-size: 11px; font-weight: 650; line-height: 1.4; white-space: normal; overflow-wrap: anywhere; }
+.admin-content-tabs button.is-active { border-color: var(--accent); color: var(--text); }
 .admin-content-tabs button:focus-visible { outline: 2px solid var(--text); outline-offset: -2px; }
+@media (min-width: 600px) {
+  .admin-content-tabs { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+}
 .admin-content-panel { min-width: 0; display: grid; }
 .admin-content-panel .admin-editor__section { padding-top: 18px; display: grid; gap: 10px; }
 .admin-content-panel .admin-editor__section h3 { margin: 0 0 2px; color: var(--text); font-size: 12px; line-height: 1.25; text-transform: none; }
@@ -14186,3 +14185,120 @@ body.is-layout-editing .layout-editor-grid { background: none; }
   box-shadow: inset 2px 0 0 var(--danger), var(--glass-surface-shadow);
 }
 :root[data-glass="on"] #page-admin .admin-event-list { gap: 10px; }
+
+/* Content editors use spaced cards and the same material as the cabinet. */
+.admin-content-panel { gap: 16px; }
+.admin-content-panel .admin-editor__section {
+  min-width: 0; margin: 0; padding: 16px; gap: 16px;
+  border: 1px solid var(--line-soft); border-radius: 18px; background: var(--surface);
+}
+.admin-content-panel .admin-editor__section h3 { margin: 0; font-size: 14px; line-height: 1.4; }
+.admin-content-panel .admin-editor__section-head { margin: 0; gap: 12px; align-items: center; }
+.admin-content-panel .admin-editor__grid { gap: 16px; }
+.admin-content-panel :is(.admin-field, .admin-broadcast-button label) { min-width: 0; display: grid; gap: 8px; margin: 0; }
+.admin-content-panel :is(.admin-field > span, .admin-broadcast-button label > span) { font-size: 11px; line-height: 1.4; }
+.admin-content-panel :is(.admin-field__control, .admin-broadcast-button input:not([type="radio"]), .admin-broadcast-button select) {
+  width: 100%; min-width: 0; min-height: 44px; padding: 12px;
+  color: var(--text); background: var(--surface); border: 1px solid var(--line);
+  border-radius: 12px; font: inherit; font-size: 12px; line-height: 1.5;
+}
+.admin-content-panel textarea.admin-field__control { min-height: 110px; }
+.admin-content-panel :is(.admin-banner-field, .admin-banner-field .admin-field) { margin: 0; }
+.admin-content-panel :is(.admin-content-disclosure, .admin-telegram-button, .admin-reminder-template, .admin-editor__subsection, .admin-broadcast-button, .admin-faq-item) {
+  min-width: 0; margin: 0; border: 1px solid var(--line-soft); border-radius: 14px; background: var(--surface);
+}
+.admin-content-panel :is(.admin-content-disclosure, .admin-telegram-button, .admin-reminder-template) > summary {
+  min-height: 48px; padding: 12px; gap: 10px;
+}
+.admin-content-panel :is(.admin-content-disclosure, .admin-telegram-button, .admin-reminder-template) > summary strong { font-size: 12px; line-height: 1.4; }
+.admin-content-panel :is(.admin-content-disclosure__body, .admin-telegram-button__body, .admin-reminder-template__body) {
+  padding: 4px 12px 12px; display: grid; gap: 16px; font-size: 11px; line-height: 1.6;
+}
+.admin-content-panel .admin-content-disclosure__fields { gap: 16px; }
+.admin-content-panel .admin-editor__subsection { padding: 14px; display: grid; gap: 16px; }
+.admin-content-panel .admin-editor__subsection h4 { margin: 0; font-size: 12px; line-height: 1.4; }
+.admin-content-panel :is(.admin-reminder-style, .admin-broadcast-style) { margin: 0; }
+.admin-content-panel :is(.admin-reminder-style, .admin-broadcast-style) legend { margin-bottom: 8px; font-size: 11px; }
+.admin-content-panel :is(.admin-reminder-style, .admin-broadcast-style) > div { gap: 8px; }
+.admin-content-panel :is(.admin-reminder-style__option, .admin-broadcast-style__option) {
+  min-height: 44px; padding: 10px; border-radius: 10px; background: var(--surface); font-size: 11px;
+}
+.admin-content-panel :is(.admin-reminder-style__option:has(input:checked), .admin-broadcast-style__option.is-selected) {
+  border-color: var(--accent); color: var(--text);
+}
+.admin-content-panel .admin-reminder-template__actions { margin: 0; display: block; }
+.admin-content-panel .admin-reminder-test {
+  width: 100%; min-height: 44px; padding: 12px; gap: 8px;
+  border: 1px solid var(--line); border-radius: 12px; background: var(--surface); font-size: 12px; font-weight: 650;
+}
+.admin-content-panel .admin-reminder-test svg { width: 16px; height: 16px; flex: 0 0 auto; color: var(--icon-color); }
+.admin-content-panel .admin-logo-field { margin: 0; padding: 0; display: grid; gap: 12px; }
+.admin-content-panel .admin-logo-field__main { grid-template-columns: 64px minmax(0, 1fr); gap: 12px; align-items: center; }
+.admin-content-panel .admin-logo-field__preview { width: 64px; border-radius: 14px; background: var(--surface); }
+.admin-content-panel .admin-logo-field__body { display: contents; }
+.admin-content-panel .admin-logo-field__actions { grid-column: 1 / -1; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
+.admin-content-panel .admin-logo-field__actions > :is(label, button) {
+  min-width: 0; min-height: 44px; padding: 10px 12px; gap: 8px;
+  border-radius: 12px; background: var(--surface); color: var(--text); font-size: 11px; font-weight: 650;
+}
+.admin-content-panel .admin-logo-field__advanced { margin: 0; padding: 0 12px; border: 1px solid var(--line-soft); border-radius: 12px; }
+.admin-content-panel .admin-logo-field__advanced summary { min-height: 44px; padding: 12px 0; font-size: 11px; }
+.admin-content-panel .admin-logo-field__advanced[open] { padding-bottom: 12px; }
+.admin-content-panel .admin-logo-field__status { margin: 0; font-size: 10px; }
+.admin-content-panel .admin-gift-buttons__head { margin: 0; padding: 0; border: 0; }
+.admin-content-panel .admin-gift-buttons__head > div { gap: 6px; }
+.admin-content-panel .admin-gift-buttons__head span { font-size: 10px; line-height: 1.5; }
+.admin-content-panel :is(.admin-broadcast__buttons, .admin-faq-editor) { display: grid; gap: 12px; }
+.admin-content-panel :is(.admin-broadcast-button, .admin-faq-item) { padding: 12px; display: grid; gap: 16px; }
+.admin-content-panel :is(.admin-broadcast-button__head, .admin-faq-item__head) { margin: 0; padding: 0; border: 0; gap: 8px; }
+.admin-content-panel .admin-broadcast-button__grid { gap: 16px; }
+.admin-content-panel .admin-payment-button { padding: 0; border: 0; display: grid; gap: 10px; }
+.admin-content-panel .admin-payment-button__settings { padding: 0; border: 0; }
+.admin-content-panel .admin-payment-button__settings .admin-telegram-button { padding: 0; }
+.admin-content-panel .admin-feature-toggle { padding: 12px; border: 1px solid var(--line-soft); border-radius: 12px; background: var(--surface); }
+.admin-content-panel :is(.admin-icon-button, .admin-faq-item__head button) {
+  flex: 0 0 44px; width: 44px; height: 44px; border-radius: 12px; background: var(--surface);
+}
+.admin-content-panel .admin-payment-variables { margin: 0; border: 0; gap: 8px; }
+.admin-content-panel .admin-payment-variables > div {
+  padding: 10px; border: 0; border-radius: 8px; background: color-mix(in srgb, var(--text) 4%, transparent);
+  grid-template-columns: 1fr; gap: 6px;
+}
+.admin-content-panel .admin-payment-variables :is(code, span) { font-size: 10px; overflow-wrap: anywhere; }
+.admin-content-panel .admin-payment-note { margin: 0; font-size: 10px; line-height: 1.6; }
+.admin-content-panel .admin-empty-line { border: 0; padding: 0; font-size: 11px; line-height: 1.6; }
+.admin-content-panel :is(button, input, textarea, summary):focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+@media (hover: hover) {
+  .admin-content-nav button:hover, .admin-content-panel :is(button, summary):hover { border-color: var(--accent); color: var(--text); }
+}
+@media (max-width: 360px) {
+  .admin-content-panel .admin-logo-field__actions { grid-template-columns: 1fr; }
+}
+@media (max-width: 520px) {
+  .admin-content-panel .admin-editor__section { padding: 14px; }
+  .admin-content-panel .admin-broadcast-button__grid { grid-template-columns: 1fr; }
+  .admin-content-panel :is(.admin-reminder-style, .admin-broadcast-style) > div { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .admin-content-panel .admin-payment-variables { grid-template-columns: 1fr; }
+}
+:root[data-glass="on"] :is(.admin-content-groups, .admin-content-groups button.is-active, .admin-content-tabs button),
+:root[data-glass="on"] .admin-content-panel :is(
+  .admin-editor__section, .admin-field__control, .admin-localization-select,
+  .admin-broadcast-button input, .admin-broadcast-button select,
+  .admin-content-disclosure, .admin-telegram-button, .admin-reminder-template,
+  .admin-editor__subsection, .admin-broadcast-button, .admin-faq-item,
+  .admin-reminder-style__option, .admin-broadcast-style__option, .admin-reminder-test,
+  .admin-logo-field__preview, .admin-logo-field__actions > label, .admin-logo-field__actions > button,
+  .admin-logo-field__advanced, .admin-feature-toggle, .admin-icon-button, .admin-faq-item__head button
+) {
+  background: var(--glass-background); background-image: var(--glass-texture);
+  background-size: 128px 128px, 100% 100%; border-color: var(--glass-border);
+  box-shadow: var(--glass-surface-shadow); backdrop-filter: var(--glass-backdrop);
+  -webkit-backdrop-filter: var(--glass-backdrop);
+}
+:root[data-glass="on"] .admin-content-nav button.is-active,
+:root[data-glass="on"] .admin-content-panel :is(.admin-reminder-style__option:has(input:checked), .admin-broadcast-style__option.is-selected) {
+  border-color: var(--accent);
+}
+
+/* Editing text never exposes a manual resize grip, including portalled forms. */
+:root textarea { resize: none !important; }

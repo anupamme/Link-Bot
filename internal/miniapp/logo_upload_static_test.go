@@ -23,7 +23,7 @@ func TestAdminLogoEditorUploadsPreviewsAndFallsBack(t *testing.T) {
 		`function uploadAdminLogo(file)`,
 		`data-brand-logo`,
 		`image.src = BRAND_MARK_URL`,
-		`PNG, JPG или WebP · до 2 МБ`,
+		`aria-label="Загрузить логотип"`,
 		`<summary>Внешняя ссылка</summary>`,
 	} {
 		if !strings.Contains(app, expected) {

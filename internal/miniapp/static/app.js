@@ -2803,7 +2803,6 @@ const state = {
 	adminJSONDrafts: {},
 	adminContentSection: readSetting(STORAGE_KEYS.adminContentSection, "start"),
 	adminContentLastSections: { Telegram: "start", "Mini App": "support" },
-	adminContentTabsScrollLeft: 0,
 	adminLayoutCategory: "dashboard",
 	adminLayoutSelection: "dashboard:logo",
   selectedFaqIndex: -1,
@@ -5083,62 +5082,18 @@ function render({ preserveScroll = true, scrollTop = null, preserveInteraction =
 function mountAdminContentTabs() {
 	const tabs = app.querySelector(".admin-content-tabs");
 	if (!tabs) return;
-
-	tabs.scrollLeft = Math.max(0, Number(state.adminContentTabsScrollLeft) || 0);
-	tabs.addEventListener("scroll", () => {
-		state.adminContentTabsScrollLeft = tabs.scrollLeft;
-	}, { passive: true });
-	tabs.addEventListener("wheel", (event) => {
-		if (tabs.scrollWidth <= tabs.clientWidth) return;
-		const delta = Math.abs(event.deltaX) > Math.abs(event.deltaY) ? event.deltaX : event.deltaY;
-		if (!delta) return;
-		event.preventDefault();
-		tabs.scrollLeft += delta;
-	}, { passive: false });
-
-	let pointerID = null;
-	let startX = 0;
-	let startScrollLeft = 0;
-	let dragged = false;
-	const finishDrag = (event) => {
-		if (pointerID === null || (event && event.pointerId !== pointerID)) return;
-		pointerID = null;
-		tabs.classList.remove("is-dragging");
-	};
-	tabs.addEventListener("pointerdown", (event) => {
-		tabs.dataset.dragMoved = "false";
-		if (event.pointerType !== "mouse" || event.button !== 0) return;
-		pointerID = event.pointerId;
-		startX = event.clientX;
-		startScrollLeft = tabs.scrollLeft;
-		dragged = false;
-		tabs.classList.add("is-dragging");
-		window.addEventListener("pointerup", finishDrag, { once: true });
-		window.addEventListener("pointercancel", finishDrag, { once: true });
-	});
-	tabs.addEventListener("pointermove", (event) => {
-		if (pointerID === null || event.pointerId !== pointerID) return;
-		const offset = event.clientX - startX;
-		if (!dragged && Math.abs(offset) < 5) return;
-		dragged = true;
-		tabs.dataset.dragMoved = "true";
-		event.preventDefault();
-		tabs.scrollLeft = startScrollLeft - offset;
-	});
-	tabs.addEventListener("click", (event) => {
-		if (tabs.dataset.dragMoved !== "true") return;
-		event.preventDefault();
-		event.stopPropagation();
-		tabs.dataset.dragMoved = "false";
-	}, true);
 	tabs.addEventListener("keydown", (event) => {
-		if (!["ArrowLeft", "ArrowRight", "Home", "End"].includes(event.key)) return;
+		if (!["ArrowLeft", "ArrowRight", "Home", "End"].includes(event.key) && !["ArrowUp", "ArrowDown"].includes(event.key)) return;
 		const buttons = [...tabs.querySelectorAll('[role="tab"]')];
 		const current = buttons.indexOf(document.activeElement);
 		if (current < 0 || !buttons.length) return;
 		let next = current;
 		if (event.key === "Home") next = 0;
 		else if (event.key === "End") next = buttons.length - 1;
+		else if (event.key === "ArrowUp" || event.key === "ArrowDown") {
+			const columns = buttons.filter(button => button.offsetTop === buttons[0].offsetTop).length || 1;
+			next = (current + (event.key === "ArrowDown" ? columns : -columns) + buttons.length) % buttons.length;
+		}
 		else next = (current + (event.key === "ArrowRight" ? 1 : -1) + buttons.length) % buttons.length;
 		event.preventDefault();
 		buttons[next].focus();
@@ -7288,17 +7243,15 @@ function renderAdminFaviconField() {
 			<div class="admin-logo-field__preview"><img src="${escapeAttribute(previewURL)}" data-brand-logo data-admin-favicon-preview alt="Предпросмотр favicon"></div>
 			<div class="admin-logo-field__body">
 				<strong>Favicon веб-версии</strong>
-				<p>PNG, JPG или WebP · до 2 МБ</p>
 				<div class="admin-logo-field__actions">
 					<label class="admin-logo-field__upload ${busy ? "is-busy" : ""}">
-						<input class="sr-only" type="file" accept="image/png,image/jpeg,image/webp" data-input="admin-favicon-file" aria-describedby="admin-favicon-help" ${busy ? "disabled" : ""}>
+						<input class="sr-only" type="file" accept="image/png,image/jpeg,image/webp" data-input="admin-favicon-file" aria-label="Загрузить иконку сайта" ${busy ? "disabled" : ""}>
 						${icon(busy ? "refresh" : "image")}<span>${busy ? "Загружаем…" : "Загрузить файл"}</span>
 					</label>
 					<button type="button" data-action="admin-favicon-reset" ${busy || isDefault ? "disabled" : ""}>${icon("reset")}<span>Стандартная</span></button>
 				</div>
 			</div>
 		</div>
-		<p class="admin-logo-field__help" id="admin-favicon-help">Лучше квадратная иконка от 128 px.</p>
 		<details class="admin-logo-field__advanced"><summary>Внешняя ссылка</summary>${renderAdminSettingField("HTTPS-адрес", "content.webPage.faviconUrl", { type: "url", placeholder: "https://example.com/favicon.png", compact: true })}</details>
 		<div class="admin-logo-field__status" role="status" aria-live="polite">${escapeHtml(source)}</div>
 	</div>`;
@@ -7319,17 +7272,15 @@ function renderAdminLogoField() {
 			<div class="admin-logo-field__preview"><img src="${escapeAttribute(previewURL)}" data-brand-logo data-admin-logo-preview alt="Предпросмотр логотипа"></div>
 			<div class="admin-logo-field__body">
 				<strong>Логотип Mini App</strong>
-				<p>PNG, JPG или WebP · до 2 МБ</p>
 				<div class="admin-logo-field__actions">
 					<label class="admin-logo-field__upload ${busy ? "is-busy" : ""}">
-						<input class="sr-only" type="file" accept="image/png,image/jpeg,image/webp" data-input="admin-logo-file" aria-describedby="admin-logo-help" ${busy ? "disabled" : ""}>
+						<input class="sr-only" type="file" accept="image/png,image/jpeg,image/webp" data-input="admin-logo-file" aria-label="Загрузить логотип" ${busy ? "disabled" : ""}>
 						${icon(busy ? "refresh" : "image")}<span>${busy ? "Загружаем…" : "Загрузить файл"}</span>
 					</label>
 					<button type="button" data-action="admin-logo-reset" ${busy || isDefault ? "disabled" : ""}>${icon("reset")}<span>Стандартный</span></button>
 				</div>
 			</div>
 		</div>
-		<p class="admin-logo-field__help" id="admin-logo-help">Лучше квадрат от 256 px с прозрачным фоном.</p>
 		<details class="admin-logo-field__advanced"><summary>Внешняя ссылка</summary>${renderAdminSettingField("HTTPS-адрес", "content.logoUrl", { type: "url", placeholder: "https://example.com/logo.png", compact: true })}</details>
 		<div class="admin-logo-field__status" role="status" aria-live="polite">${escapeHtml(source)}</div>
 	</div>`;
@@ -7339,7 +7290,6 @@ function renderAdminVerificationContent() {
 	return `<section class="admin-editor__section"><h3>Канал для проверки</h3>
 		${renderAdminSettingField("Ссылка на канал", "content.links.channel", { type: "url", placeholder: "https://t.me/channel; пусто — проверка отключена" })}
 		${renderAdminSettingField("ID приватного канала", "content.verification.channelChatId", { placeholder: "-1001234567890; для публичного канала не нужен" })}
-		<div class="admin-empty-line">Бот — администратор канала. Пустая ссылка отключает проверку.</div>
 	</section>
 	<section class="admin-editor__section"><h3>Сообщение верификации</h3>
 		${renderAdminBannerField("Баннер верификации", "content.verification.banner", "/assets/telegram/verification/banner.png")}
@@ -7358,7 +7308,7 @@ function renderAdminVerificationContent() {
 
 function renderAdminCommerceContent() {
 	return `<section class="admin-editor__section"><h3>Экраны покупки</h3>
-		${renderAdminBannerField("Общий баннер тарифов и оплаты", "content.commerce.banner", "/assets/telegram/commerce/banner.png")}
+		${renderAdminBannerField("Баннер", "content.commerce.banner", "/assets/telegram/commerce/banner.png")}
 		${renderAdminSettingField("Экран выбора тарифа", "content.commerce.tariffsText", { textarea: true, rows: 4 })}
 		${renderAdminSettingField("Экран выбора способа оплаты", "content.commerce.paymentMethodsText", { textarea: true, rows: 4 })}
 		${renderAdminSettingField("Экран перехода к оплате", "content.commerce.paymentReadyText", { textarea: true, rows: 4 })}
@@ -7377,10 +7327,11 @@ function renderAdminCommerceContent() {
 function renderAdminSuccessContent() {
 	const busy = state.adminBusy === "test-success";
 	return `<section class="admin-editor__section">
-		<div class="admin-editor__section-head"><h3>Подписка активирована</h3><button class="admin-reminder-test" type="button" data-action="admin-test-success" ${state.adminBusy ? "disabled" : ""}><span>${busy ? "Отправляем" : "Отправить тест"}</span></button></div>
+		<h3>Подписка активирована</h3>
 		${renderAdminBannerField("Баннер успешной покупки", "content.commerce.successBanner", "/assets/telegram/success/banner.png")}
 		${renderAdminSettingField("Текст после оплаты", "content.commerce.successText", { textarea: true, rows: 7 })}
 		${renderAdminTelegramButton("Переход в личный кабинет", "content.commerce.successButton")}
+		<button class="admin-reminder-test" type="button" data-action="admin-test-success" ${state.adminBusy ? "disabled" : ""}>${icon(busy ? "refresh" : "send")}<span>${busy ? "Отправляем…" : "Отправить тест"}</span></button>
 	</section>`;
 }
 
@@ -7401,10 +7352,11 @@ function renderAdminGiftMessageEditor(kind, title, message) {
 	const buttons = Array.isArray(message?.buttons) ? message.buttons : [];
 	const busy = state.adminBusy === `test-gift-${kind}`;
 	return `<section class="admin-editor__section admin-gift-message">
-		<div class="admin-editor__section-head"><h3>${escapeHtml(title)}</h3><button class="admin-reminder-test" type="button" data-action="admin-test-gift" data-value="${kind}" ${state.adminBusy ? "disabled" : ""}>${icon(busy ? "refresh" : "send")}<span>${busy ? "Отправляем" : "Тест"}</span></button></div>
+		<h3>${escapeHtml(title)}</h3>
 		${renderAdminSettingField("Текст сообщения", `content.gift.${kind}.text`, { textarea: true, rows: 9 })}
 		<div class="admin-gift-buttons__head"><div><strong>Кнопки</strong><span>До 8 кнопок, как в рассылке</span></div><button class="admin-icon-button" type="button" data-action="admin-gift-add-button" data-value="${kind}" ${buttons.length >= 8 ? "disabled" : ""} aria-label="Добавить кнопку">${icon("plus")}</button></div>
 		<div class="admin-broadcast__buttons">${buttons.length ? buttons.map((button, index) => renderAdminGiftButton(kind, button, index)).join("") : `<p class="admin-broadcast__empty">Сообщение будет отправлено без кнопок.</p>`}</div>
+		<button class="admin-reminder-test" type="button" data-action="admin-test-gift" data-value="${kind}" ${state.adminBusy ? "disabled" : ""}>${icon(busy ? "refresh" : "send")}<span>${busy ? "Отправляем…" : "Отправить тест"}</span></button>
 	</section>`;
 }
 
@@ -7420,7 +7372,7 @@ function renderAdminGiftButton(kind, button, index) {
 	return `<div class="admin-broadcast-button">
 		<div class="admin-broadcast-button__head"><strong>Кнопка ${index + 1}</strong><button class="admin-icon-button admin-icon-button--danger" type="button" data-action="admin-gift-remove-button" data-value="${index}" data-gift-kind="${kind}" aria-label="Удалить">${icon("trash")}</button></div>
 		<div class="admin-broadcast-button__grid">
-			<label><span>Тип</span><select data-gift-kind="${kind}" data-gift-index="${index}" data-gift-field="type">${typeOptions.map(([value, label]) => `<option value="${value}" ${type === value ? "selected" : ""}>${label}</option>`).join("")}</select></label>
+			<label class="admin-field"><span>Тип</span><select class="admin-field__control" data-gift-kind="${kind}" data-gift-index="${index}" data-gift-field="type">${typeOptions.map(([value, label]) => `<option value="${value}" ${type === value ? "selected" : ""}>${label}</option>`).join("")}</select></label>
 			<label><span>Текст кнопки</span><input type="text" maxlength="256" value="${escapeAttribute(button?.text || "")}" data-gift-kind="${kind}" data-gift-index="${index}" data-gift-field="text" placeholder="Открыть подарок"></label>
 		</div>
 		${type === "url" ? `<label><span>URL</span><input type="url" maxlength="256" value="${escapeAttribute(button?.url || "")}" data-gift-kind="${kind}" data-gift-index="${index}" data-gift-field="url" placeholder="https://..."></label>` : ""}
@@ -7442,9 +7394,10 @@ function renderAdminPaymentNotificationContent() {
 		["{{device}}", "Количество докупленных устройств"],
 	];
 	return `<section class="admin-editor__section admin-payment-notification">
-		<div class="admin-editor__section-head"><div><h3>Уведомление об оплате</h3><p>Чат задаётся в интеграции.</p></div><button class="admin-reminder-test" type="button" data-action="admin-test-payment-notification" ${state.adminBusy ? "disabled" : ""}>${icon("send")}<span>${busy ? "Отправляем" : "Тест"}</span></button></div>
+		<h3>Уведомление об оплате</h3>
 		${renderAdminVariableReference("Переменные шаблона", variables, "Пустые promo, sub и device скрываются")}
 		${renderAdminSettingField("Текст уведомления", "content.paymentNotification.text", { textarea: true, rows: 12 })}
+		<button class="admin-reminder-test" type="button" data-action="admin-test-payment-notification" ${state.adminBusy ? "disabled" : ""}>${icon(busy ? "refresh" : "send")}<span>${busy ? "Отправляем…" : "Отправить тест"}</span></button>
 	</section>
 	<section class="admin-editor__section"><h3>Кнопки уведомления</h3>
 		${renderAdminPaymentNotificationButton("Открыть пользователя в панели", "Remnawave", "content.paymentNotification.openUserButton")}
@@ -7567,7 +7520,7 @@ function renderAdminVariableReference(title, variables, note = "") {
 }
 
 function renderAdminBannerField(label, path, example) {
-	return `<div class="admin-banner-field">${renderAdminSettingField(label, path, { placeholder: `${example} или HTTPS URL` })}<small>Локальный путь или HTTPS · пусто — без баннера</small></div>`;
+	return `<div class="admin-banner-field">${renderAdminSettingField(label, path, { placeholder: `${example} или HTTPS URL` })}</div>`;
 }
 
 function renderAdminTelegramButton(title, path) {
@@ -7584,8 +7537,8 @@ function renderAdminReminderTemplate(kind, label, path) {
 	return `<details class="admin-reminder-template">
 		<summary><strong>${escapeHtml(label)}</strong><span>Изменить</span></summary>
 		<div class="admin-reminder-template__body">
-			<div class="admin-reminder-template__actions"><button class="admin-reminder-test" type="button" data-action="admin-test-reminder" data-value="${escapeAttribute(kind)}" ${state.adminBusy ? "disabled" : ""}><span>${busy ? "Отправляем" : "Отправить тест"}</span></button></div>
 			${renderAdminSettingField("Текст уведомления", path, { textarea: true, rows: 7 })}
+			<div class="admin-reminder-template__actions"><button class="admin-reminder-test" type="button" data-action="admin-test-reminder" data-value="${escapeAttribute(kind)}" ${state.adminBusy ? "disabled" : ""}>${icon(busy ? "refresh" : "send")}<span>${busy ? "Отправляем…" : "Отправить тест"}</span></button></div>
 		</div>
 	</details>`;
 }
@@ -12233,9 +12186,9 @@ function bindRootActions() {
 			if (action === "admin-content-group") {
 				const group = value === "Mini App" ? "Mini App" : "Telegram";
 				state.adminContentSection = state.adminContentLastSections?.[group] || (group === "Mini App" ? "support" : "start");
-				state.adminContentTabsScrollLeft = 0;
 				haptic("light");
 				render({ preserveScroll: true });
+				app.querySelector(".admin-content-groups .is-active")?.focus({ preventScroll: true });
 				return;
 			}
 			if (action === "admin-content-section") {
@@ -12244,6 +12197,7 @@ function bindRootActions() {
 				if (group === "Telegram" || group === "Mini App") state.adminContentLastSections[group] = state.adminContentSection;
 				haptic("light");
 				render({ preserveScroll: true });
+				app.querySelector(".admin-content-tabs .is-active")?.focus({ preventScroll: true });
 				return;
 			}
 			if (action === "admin-add-faq") return addAdminFAQItem();
@@ -12448,13 +12402,13 @@ function bindRootActions() {
 		if (["sender", "recipient"].includes(giftKind) && Number.isInteger(giftIndex) && giftIndex >= 0 && giftField && Array.isArray(giftButtons) && giftButtons[giftIndex]) {
 			const button = giftButtons[giftIndex];
 			button[giftField] = target.value;
+			state.adminSettingsDirty = true;
 			if (giftField === "type") {
 				const allowed = ["gift", "url", "main", "reviews", "referrals", "login_methods", "support", "devices"];
 				button.type = allowed.includes(target.value) ? target.value : "main";
 				if (button.type !== "url") button.url = "";
 				render({ preserveScroll: true });
 			}
-			state.adminSettingsDirty = true;
 			syncAdminSaveBarDOM();
 			return;
 		}
