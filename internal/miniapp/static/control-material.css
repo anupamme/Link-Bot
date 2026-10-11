@@ -10,7 +10,7 @@
    tying this shared theme rule to a particular page or its selector weight. */
 @layer control-material {
   :root :is(#app, .modal, .mantine-Modal-root, .mantine-Drawer-root) :where(
-    button:not(.bottom-nav__item):not([data-action="administrators-color"]):not(.admin-localization-menu__option),
+    button:not(.bottom-nav__item):not(.modal__backdrop):not([data-action="administrators-color"]):not(.admin-localization-menu__option),
     input:not([type="checkbox"]):not([type="radio"]):not([type="range"]):not([type="color"]):not([type="file"]):not([type="hidden"]),
     textarea, select,
     .admin-localization-select, .admin-logo-field__upload, .surface-upload,
@@ -22,7 +22,7 @@
     .admin-content-disclosure > summary, .admin-logo-field__advanced > summary,
     .admin-partner-entry__summary, .admin-activity__entry > summary,
     .admin-partner-entry__resource,
-    .pricing-card, .menu-row, .profile-row, .pay-row, .platform-btn, .quick-link, .pay-selector,
+    .pricing-card, .device-pack-trigger-row, .menu-row, .profile-row, .pay-row, .platform-btn, .quick-link, .pay-selector,
     .admin-content-groups, .admin-access__tabs, .admin-broadcast__tabs, .admin-mail__tabs,
     .admin-promo-type-switch, .admin-promo-unit-switch,
     .bottom-nav:not([data-nav-style="notch"]), .bottom-nav__surface,
@@ -58,7 +58,7 @@
    of the card tint. A portalled menu keeps its stronger blur for legibility. */
 @layer control-material {
   :root[data-glass="on"] :is(#app, .modal, .mantine-Modal-root, .mantine-Drawer-root) :where(
-    button:not(.bottom-nav__item):not([data-action="administrators-color"]):not(.admin-localization-menu__option),
+    button:not(.bottom-nav__item):not(.modal__backdrop):not([data-action="administrators-color"]):not(.admin-localization-menu__option),
     input:not([type="checkbox"]):not([type="radio"]):not([type="range"]):not([type="color"]):not([type="file"]):not([type="hidden"]),
     textarea, select,
     .admin-logo-field__upload, .surface-upload, .admin-users__search, .admin-settings-search__field,
@@ -66,7 +66,7 @@
     .admin-moynalog__methods label, .admin-subpage-platforms label, .admin-reminder-style__option, .audience-squads label,
     .admin-telegram-button > summary, .admin-reminder-template > summary, .admin-content-disclosure > summary,
     .admin-logo-field__advanced > summary, .admin-partner-entry__summary, .admin-activity__entry > summary,
-    .admin-partner-entry__resource, .pricing-card, .menu-row, .profile-row, .pay-row, .platform-btn, .quick-link, .pay-selector,
+    .admin-partner-entry__resource, .pricing-card, .device-pack-trigger-row, .menu-row, .profile-row, .pay-row, .platform-btn, .quick-link, .pay-selector,
     .admin-content-groups, .admin-access__tabs, .admin-broadcast__tabs, .admin-mail__tabs,
     .admin-promo-type-switch, .admin-promo-unit-switch, .switch-selection,
     .bottom-nav:not([data-nav-style="notch"]), .bottom-nav__surface, .mantine-Input-input:not([type="checkbox"]):not([type="radio"])
@@ -79,5 +79,18 @@
     background-image: var(--glass-texture) !important;
     background-size: 128px 128px, 100% 100% !important;
     backdrop-filter: var(--glass-menu-backdrop) !important; -webkit-backdrop-filter: var(--glass-menu-backdrop) !important;
+  }
+
+  /* Composite purchase rows own one pane; their inner buttons add no second tint. */
+  :root #app .device-pack-trigger-row > button {
+    background: transparent !important; background-image: none !important;
+    box-shadow: none !important; backdrop-filter: none !important; -webkit-backdrop-filter: none !important;
+  }
+
+  /* Switch rows are plain labels around the switch, rather than extra surfaces. */
+  :root :is(#app, .modal, .mantine-Modal-root, .mantine-Drawer-root) :is(.admin-toggle, .admin-toggle-row) {
+    background: transparent !important; background-image: none !important;
+    border: 0 !important; box-shadow: none !important;
+    backdrop-filter: none !important; -webkit-backdrop-filter: none !important;
   }
 }
