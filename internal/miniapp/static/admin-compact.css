@@ -1,0 +1,138 @@
+/* Shared admin density. Typography and the configured card/glass material stay intact. */
+#app :is(#page-admin, .rn-content) {
+  --admin-control-height: 36px;
+  --admin-control-radius: 7px;
+  --admin-card-radius: 10px;
+}
+
+#app :is(#page-admin, .rn-content) :is(
+  .admin-editor, .admin-content-panel, .admin-subpage, .admin-ai,
+  .admin-integrations, .admin-moynalog, .surface-settings, .appearance-theme,
+  .admin-access, .admin-status, .admin-user-detail, .admin-user-subscriptions
+) { gap: 12px; }
+
+#app :is(#page-admin, .rn-content) :is(
+  .admin-content-panel .admin-editor__section, .admin-ai__card,
+  .admin-subpage-client, .admin-moynalog-receipt, .surface-card,
+  .appearance-theme > .admin-editor__section, .admin-appearance-group,
+  .admin-status__service, .admin-status__section, .admin-status__error,
+  .admin-user-subscription, .admin-user-controls__group--balance,
+  .admin-user-direct, .admin-access-card, .admin-event
+) { padding: 12px; gap: 12px; border-radius: var(--admin-card-radius); }
+
+#app :is(#page-admin, .rn-content) :is(
+  .admin-content-disclosure, .admin-telegram-button, .admin-reminder-template,
+  .admin-editor__subsection, .admin-broadcast-button, .admin-faq-item,
+  .admin-integration, .admin-finance-card, .admin-settings-search__results,
+  .admin-settings-search__empty, .admin-localization__preview
+) { border-radius: var(--admin-card-radius); }
+
+#app :is(#page-admin, .rn-content) :is(
+  .admin-content-panel .admin-editor__subsection,
+  .admin-content-panel .admin-broadcast-button, .admin-content-panel .admin-faq-item
+) { padding: 10px; gap: 12px; }
+
+#app :is(#page-admin, .rn-content) :is(
+  .admin-editor__grid, .admin-content-disclosure__fields,
+  .admin-broadcast-button__grid, .admin-subpage-list,
+  .admin-ai__card, .admin-moynalog__credentials
+) { gap: 12px; }
+
+#app :is(#page-admin, .rn-content) :is(.admin-field, .admin-broadcast-button label) { gap: 6px; }
+
+#app :is(#page-admin, .rn-content) :is(
+  .admin-field__control:not(textarea):not([type="checkbox"]):not([type="radio"]):not([type="range"]):not([type="color"]),
+  .admin-email-broadcast__field input, .admin-broadcast-button input,
+  .admin-broadcast-button select, .admin-user-control-row input,
+  .admin-finance__custom input
+) {
+  min-height: var(--admin-control-height);
+  padding: 8px 10px;
+  border-radius: var(--admin-control-radius);
+}
+
+#app :is(#page-admin, .rn-content) :is(textarea.admin-field__control, .admin-email-broadcast__field textarea) {
+  min-height: 80px; padding: 8px 10px; border-radius: var(--admin-control-radius);
+}
+#app :is(#page-admin, .rn-content) textarea.admin-ai__prompt { height: 180px; min-height: 180px; }
+
+#app :is(#page-admin, .rn-content) :is(
+  .admin-content-nav button, .admin-reminder-test, .admin-reminder-style__option,
+  .admin-broadcast-style__option, .admin-subpage-builtins__client, .admin-subpage-add,
+  .admin-ai__button, .admin-ai__model, .admin-ai__reset,
+  .admin-moynalog__actions button, .admin-moynalog-receipt__state button,
+  .admin-logo-field__actions > label, .admin-logo-field__actions > button,
+  .admin-integration__save, .admin-broadcast__primary, .admin-broadcast__secondary,
+  .admin-broadcast__actions button, .admin-broadcast__reset,
+  .admin-finance__more, .admin-users__more, .admin-user-direct__compose,
+  .admin-user-direct__actions button, .admin-user-direct__confirm button,
+  .admin-user-controls__group button, .admin-partners__create-fields button,
+  .admin-partner-entry__actions button, .surface-button
+) {
+  min-height: var(--admin-control-height);
+  height: auto; padding: 8px 10px; border-radius: var(--admin-control-radius);
+}
+
+#app :is(#page-admin, .rn-content) :is(
+  .admin-icon-button, .admin-faq-item__head button, .admin-subpage-client__actions button,
+  .admin-builder-row__actions button, .admin-moynalog__section-head > button,
+  .admin-access__back, .admin-status__header button
+) {
+  width: 34px; min-width: 34px; height: 34px; min-height: 34px;
+  flex: 0 0 34px; padding: 6px; border-radius: var(--admin-control-radius);
+}
+
+#app :is(#page-admin, .rn-content) :is(
+  .admin-ai__power, .admin-subpage .admin-toggle, .admin-feature-toggle,
+  .admin-moynalog__methods label, .admin-subpage-platforms label
+) { min-height: 38px; padding: 8px 10px; border-radius: var(--admin-control-radius); }
+
+#app :is(#page-admin, .rn-content) :is(
+  .admin-content-disclosure, .admin-telegram-button, .admin-reminder-template
+) > summary { min-height: 38px; padding: 9px 10px; }
+
+#app :is(#page-admin, .rn-content) :is(
+  .admin-content-disclosure__body, .admin-telegram-button__body, .admin-reminder-template__body
+) { padding: 2px 10px 10px; gap: 12px; }
+
+#app :is(#page-admin, .rn-content) .admin-content-groups { padding: 3px; gap: 3px; border-radius: var(--admin-card-radius); }
+#app :is(#page-admin, .rn-content) :is(.admin-content-nav, .admin-logo-field, .admin-logo-field__body) { gap: 8px; }
+#app :is(#page-admin, .rn-content) .admin-content-tabs { gap: 6px; }
+#app :is(#page-admin, .rn-content) .admin-logo-field__main { grid-template-columns: 48px minmax(0, 1fr); gap: 10px; }
+#app :is(#page-admin, .rn-content) .admin-logo-field__preview { width: 48px; border-radius: var(--admin-control-radius); }
+#app :is(#page-admin, .rn-content) .admin-logo-field__advanced { padding-inline: 10px; border-radius: var(--admin-control-radius); }
+#app :is(#page-admin, .rn-content) .admin-logo-field__advanced summary { min-height: 36px; padding-block: 9px; }
+#app :is(#page-admin, .rn-content) .admin-logo-field__advanced[open] { padding-bottom: 10px; }
+#app :is(#page-admin, .rn-content) :is(.admin-settings-search__field, .admin-settings-search__results, .admin-settings-search__empty) { border-radius: var(--admin-card-radius); }
+#app :is(#page-admin, .rn-content) .admin-settings-search__field { min-height: 40px; padding-inline: 10px; }
+#app :is(#page-admin, .rn-content) .admin-toggle { min-height: 38px; }
+#app :is(#page-admin, .rn-content) .admin-menu-group .menu-row { min-height: 40px; padding: 8px 10px; border-radius: 7px; }
+#app :is(#page-admin, .rn-content) .admin-range-field { padding-block: 9px 7px; }
+#app :is(#page-admin, .rn-content) .admin-color-field { min-height: 42px; border-radius: 7px; }
+#app :is(#page-admin, .rn-content) .admin-color-field input[type="color"] { height: 42px; }
+#app :is(#page-admin, .rn-content) .admin-nav-option { padding: 24px 8px 10px; gap: 8px; border-radius: 10px; }
+
+/* These dropdowns are portalled outside the admin page. */
+.admin-localization-select {
+  min-height: 36px; padding: 8px 32px 8px 10px; border-radius: 7px;
+}
+.admin-localization-select::after,
+.admin-localization-select[aria-expanded="true"]::after { top: calc(50% - 5px); inset-inline-end: 12px; }
+.admin-localization-menu { padding: 4px; border-radius: 9px; }
+.admin-localization-menu__option { min-height: 36px; padding-block: 8px; border-radius: 6px; }
+
+/* Native console controls follow the same density without changing their labels. */
+html[data-admin-console="on"] :is(.rn-main, .rn-user-operations) .mantine-Input-input:not(textarea) {
+  min-height: 36px; height: auto; border-radius: 7px;
+}
+html[data-admin-console="on"] :is(.rn-main, .rn-user-operations) .mantine-Button-root:not(.cursor-preset):not(.admin-nav-option) {
+  min-height: 36px; height: auto; border-radius: 7px;
+}
+html[data-admin-console="on"] .rn-main :is(.rn-clickable-card, .rn-settings-panel) { padding: 10px; gap: 10px; }
+
+/* Admin dialogs live outside the page; customer forms keep their own sizing. */
+#app :is(.admin-plan-modal, .admin-profile-modal) .admin-field__control:not(textarea) {
+  min-height: 36px; padding: 8px 10px; border-radius: 7px;
+}
+#app :is(.admin-plan-modal, .admin-profile-modal) textarea.admin-field__control { padding: 8px 10px; border-radius: 7px; }
+#app :is(.admin-plan-modal__save, .admin-profile-modal__footer .btn) { min-height: 36px; padding: 8px 10px; border-radius: 7px; }
