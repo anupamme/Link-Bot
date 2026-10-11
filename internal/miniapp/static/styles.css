@@ -13642,6 +13642,10 @@ body.is-layout-editing .layout-editor-grid { background: none; }
 
 /* Dashboard placeholders share the real layout and leave the configured background visible. */
 .admin-status { display: grid; gap: 13px; padding: 2px 4px 100px; }
+.admin-status__topline { gap: 12px; margin-bottom: 0; }
+.admin-status__topline > .admin-status__overview { flex: 1; min-width: 0; }
+.admin-status__topline > button { flex: 0 0 32px; }
+.admin-status__topline .admin-status__overview > div { min-width: 0; overflow-wrap: anywhere; }
 .admin-status__header { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 2px; }
 .admin-status__header > div { display: grid; gap: 3px; }
 .admin-status__header span { color: var(--muted); font-size: 9px; font-weight: 800; letter-spacing: .12em; }

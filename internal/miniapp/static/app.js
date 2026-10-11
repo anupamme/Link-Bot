@@ -5537,8 +5537,10 @@ function renderAdminStatusPage() {
 	const checked = new Date(data.checkedAt || "");
 	const checkedText = Number.isNaN(checked.getTime()) ? "—" : new Intl.DateTimeFormat("ru-RU", { hour: "2-digit", minute: "2-digit" }).format(checked);
 	return `<section class="page admin-page ${pageClass("admin")}" id="page-admin"><div class="admin-status">
-		<header class="admin-section-tools"><button type="button" data-action="admin-status-refresh" aria-label="Обновить статус" ${state.adminStatusBusy ? "disabled" : ""}>${icon("refresh")}</button></header>
-		<div class="admin-status__overview ${healthy ? "is-healthy" : "is-attention"}"><i aria-hidden="true"></i><div><strong>${healthy ? "Сервисы доступны" : "Проверьте состояние сервисов"}</strong><span>Данные обновлены в ${checkedText}</span></div></div>
+		<header class="admin-section-tools admin-status__topline">
+			<div class="admin-status__overview ${healthy ? "is-healthy" : "is-attention"}"><i aria-hidden="true"></i><div><strong>${healthy ? "Сервисы доступны" : "Проверьте состояние сервисов"}</strong><span>Данные обновлены в ${checkedText}</span></div></div>
+			<button type="button" data-action="admin-status-refresh" aria-label="Обновить статус" ${state.adminStatusBusy ? "disabled" : ""}>${icon("refresh")}</button>
+		</header>
 		<div class="admin-status__grid">
 			${renderAdminStatusService("Бот", bot, "server", [["Время работы", adminStatusDuration(bot.uptimeSeconds)], ["Память Go", adminStatusMemory(data.heapBytes)]])}
 			${renderAdminStatusService("Панель Remnawave", panel, "server", [["Время работы сервера", adminStatusDuration(panel.uptimeSeconds)], ["Память сервера", Number(panel.memoryTotalBytes) ? `${adminStatusMemory(panel.memoryUsedBytes)} / ${adminStatusMemory(panel.memoryTotalBytes)}` : "—"]])}
