@@ -303,6 +303,7 @@ function Field({ node, label, toggle = false, ...props }) {
       />
     );
   }
+  if (node.type === "color") return <input {...common} />;
   if (node.tagName === "SELECT")
     return (
       <NativeSelect
@@ -445,6 +446,19 @@ function convert(node, key) {
       ":scope > input,:scope > textarea,:scope > select",
     );
     if (control) {
+      if (control.type === "color") {
+        return (
+          <label {...p} className={`${node.className} rn-color-field`}>
+            <Field
+              node={control}
+              aria-label={node.querySelector("strong")?.textContent || "Цвет"}
+            />
+            {[...node.childNodes]
+              .filter((n) => n !== control)
+              .map((n, i) => convert(n, i))}
+          </label>
+        );
+      }
       if (node.classList.contains("admin-settings-search__field")) {
         return (
           <div key={key} className="rn-search-field">
@@ -470,7 +484,7 @@ function convert(node, key) {
             key={key}
             component="label"
             variant="outline"
-            size="lg"
+            size={Control === ActionIcon ? "lg" : "sm"}
             className="rn-file-picker"
             aria-label={label}
             disabled={control.disabled}
@@ -1383,8 +1397,6 @@ function Admin({ model, content, dialogs, dispatch }) {
       [
         "content",
         "appearance",
-        "landing",
-        "cursors",
         "layout",
         "localization",
         "features",

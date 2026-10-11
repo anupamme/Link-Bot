@@ -17,7 +17,7 @@ import { syncTelegramLayout } from "./telegram-layout.mjs";
 import { renderSMTPSettings } from "./admin-smtp.mjs";
 import { syncCustomBackground, probeBackground, draggedPosition } from "./custom-background.mjs";
 import {applyCustomCursor,cursorValues} from "./custom-cursor.mjs";
-import {ensureSurfaceSettings,renderCursorEditor,renderLandingEditor,renderAudienceEditor} from "./surface-editors.mjs";
+import {ensureSurfaceSettings,renderCursorEditor,renderLandingEditor,renderAudienceEditor,previewButtonColor} from "./surface-editors.mjs";
 import { renderCustomBackgroundEditor } from "./custom-background-editor.mjs";
 import { reuseAdminUserRows } from "./stable-user-rows.mjs";
 import { renderAISettings } from "./admin-ai.mjs";
@@ -2747,7 +2747,7 @@ const state = {
   adminSubscriptionTargetResult: null,
   adminSubscriptionDestination: "",
   adminBusy: "",
-	adminLandingTab:"colors", adminCursorSurface:"landing", adminAudienceDraft:{}, adminAudienceCount:{}, adminAudienceOptions:null, adminAudienceBusy:false,
+	adminAppearanceTab:"theme", adminLandingTab:"colors", adminCursorSurface:"landing", adminAudienceDraft:{}, adminAudienceCount:{}, adminAudienceOptions:null, adminAudienceBusy:false,
 	adminBroadcast: null,
 	adminBroadcastTab: readSetting(STORAGE_KEYS.adminBroadcastTab, "telegram") === "email" ? "email" : "telegram",
 	adminEmailBroadcast: null,
@@ -4912,6 +4912,7 @@ function mountSwitchSelections(previous = new Map()) {
 }
 
 function render({ preserveScroll = true, scrollTop = null, preserveInteraction = false, textTransitionMode = "content" } = {}) {
+  normalizeAppearanceSection();
 	const switchSelections = captureSwitchSelections();
 	const bottomNavSelection = captureBottomNavSelection();
 	const transitionGeneration = ++textTransitionRenderGeneration;
@@ -5276,8 +5277,6 @@ function renderAdminPage() {
 	if (state.adminSection === "features") return renderAdminFeaturesPage();
 	if (state.adminSection === "subpage") return renderAdminSubPagePage();
 	if (state.adminSection === "content") return renderAdminContentPage();
-	if (state.adminSection === "landing") return renderAdminEditorPage("Лендинг",renderLandingEditor(state.adminSettingsDraft.appearance,state.adminLandingTab,{escapeHtml,escapeAttribute,renderAdminColorField}));
- if (state.adminSection === "cursors") {queueMicrotask(syncCursorDemo);return renderAdminEditorPage("Курсоры",renderCursorEditor(state.adminSettingsDraft.appearance,state.adminCursorSurface,{escapeHtml,escapeAttribute}));}
 	if (state.adminSection === "appearance") return renderAdminAppearancePage();
 	if (state.adminSection === "layout") return renderAdminLayoutPage();
 	if (state.adminSection === "plans") return renderAdminPlansPage();
@@ -5316,8 +5315,6 @@ function renderAdminPage() {
 				[localizedText("Редактор контента", "Content", "ویرایشگر محتوا"), "", "content", "adminContent"],
 				["Sub page", "", "subpage", "adminSubscriptions"],
 				[localizedText("Оформление", "Appearance", "ظاهر"), "", "appearance", "adminAppearance"],
-				[localizedText("Лендинг", "Landing", "صفحه اصلی"), "", "landing", "adminAppearance"],
-				[localizedText("Курсоры", "Cursors", "نشانگرها"), "", "cursors", "adminAppearance"],
 				[localizedText("Конструктор UI", "UI builder", "سازنده رابط"), "", "layout", "grid"],
 				[localizedText("Тарифы", "Plans", "تعرفه‌ها"), "", "plans", "cartShopping"],
 			])}
@@ -5450,6 +5447,7 @@ function openAdminSettingsSearchResult(index) {
 	if (item.section === "layout") return enterAdminLayoutEditor();
 	if (item.section === "plans") return enterAdminPlanEditor();
 	state.adminSection = item.section;
+  normalizeAppearanceSection();
 	if (item.contentSection) state.adminContentSection = item.contentSection;
 	haptic("light");
 	renderAdminTransition();
@@ -7822,23 +7820,98 @@ function renderAdminBottomNavStyles() {
   return `<section class="admin-editor__section admin-nav-picker"><h3>${escapeHtml(localizedText("Нижнее меню", "Bottom menu", "منوی پایین"))}</h3><p>${escapeHtml(localizedText("Для узких экранов. Цвета и стекло — из вашей темы.", "For narrow screens. Uses your theme colors and glass.", "برای صفحه‌های باریک، با رنگ و شیشه پوسته شما."))}</p><div class="admin-nav-options" role="radiogroup" aria-label="${escapeAttribute(localizedText("Дизайн меню", "Menu design", "طرح منو"))}">${BOTTOM_NAV_STYLES.map(([style, ru, en, fa]) => `<button type="button" class="admin-nav-option ${style === selected ? "is-selected" : ""}" role="radio" aria-checked="${style === selected}" data-action="admin-nav-style" data-value="${style}"><span class="admin-nav-preview" data-nav-style="${style}" aria-hidden="true">${bottomNavSurface(style)}<span class="bottom-nav__indicator">${bottomNavDecoration(style)}</span>${["houseLine", "shop", "sms", "userAlt", "grid"].map((name, i) => `<span class="bottom-nav__item ${i === 0 ? "active" : ""}"><span class="bottom-nav__icon">${icon(name)}</span></span>`).join("")}</span><strong>${escapeHtml(localizedText(ru, en, fa))}</strong></button>`).join("")}</div></section>`;
 }
 
+function normalizeAppearanceSection() {
+  if (["landing", "cursors"].includes(state.adminSection)) {
+    state.adminAppearanceTab = state.adminSection;
+    state.adminSection = "appearance";
+  }
+}
+
 function renderAdminAppearancePage() {
-	const savedMode = String(getDeepValue(state.adminSettingsDraft, "appearance.backgroundMode", "animated"));
-	const currentMode = ADMIN_BACKGROUND_OPTIONS.some(([mode]) => mode === savedMode) ? savedMode : "animated";
-	const groups = [
-		["Текст", [["text", "Основной текст"], ["muted", "Второстепенный текст"]]],
-		["Карточки и рамки", [["surface", "Фон карточек"], ["border", "Рамки элементов"]]],
-		["Кнопки и навигация", [["button", "Фон кнопок и тарифов"], ["buttonText", "Текст кнопок и тарифов"], ["icon", "Иконки"], ["accent", "Акцент и рамка выбора"]]],
-		["Состояния", [["success", "Успешные действия"], ["danger", "Ошибки и удаление"], ["unlimitedBadge", "Значок «Безлимит»"]]],
-	];
-	return renderAdminEditorPage(state.locale === "en" ? "Appearance" : "Оформление", `
+  const tab = ["theme", "landing", "cursors"].includes(state.adminAppearanceTab)
+    ? state.adminAppearanceTab
+    : "theme";
+  const tabs = [
+    ["theme", "Кабинет"],
+    ["landing", "Лендинг"],
+    ["cursors", "Курсоры"],
+  ];
+  const nav = `<div class="appearance-tabs surface-tabs" role="tablist" aria-label="Оформление">${tabs.map(([id, label]) => `<button type="button" role="tab" aria-selected="${tab === id}" data-action="admin-appearance-tab" data-value="${id}">${label}</button>`).join("")}</div>`;
+  let body;
+  if (tab === "landing")
+    body = renderLandingEditor(
+      state.adminSettingsDraft.appearance,
+      state.adminLandingTab,
+      { escapeHtml, escapeAttribute, renderAdminColorField },
+    );
+  else if (tab === "cursors") {
+    body = renderCursorEditor(
+      state.adminSettingsDraft.appearance,
+      state.adminCursorSurface,
+      { escapeHtml, escapeAttribute },
+    );
+    queueMicrotask(syncCursorDemo);
+  } else body = renderAdminCabinetAppearance();
+  return renderAdminEditorPage(
+    localizedText("Оформление", "Appearance", "ظاهر"),
+    `<div class="appearance-settings">${nav}<div class="appearance-panel" data-appearance-panel="${tab}">${body}</div></div>`,
+  );
+}
+
+function renderAdminCabinetAppearance() {
+  const savedMode = String(
+    getDeepValue(
+      state.adminSettingsDraft,
+      "appearance.backgroundMode",
+      "animated",
+    ),
+  );
+  const currentMode = ADMIN_BACKGROUND_OPTIONS.some(
+    ([mode]) => mode === savedMode,
+  )
+    ? savedMode
+    : "animated";
+  const groups = [
+    [
+      "Текст",
+      [
+        ["text", "Основной текст"],
+        ["muted", "Второстепенный текст"],
+      ],
+    ],
+    [
+      "Карточки и рамки",
+      [
+        ["surface", "Фон карточек"],
+        ["border", "Рамки элементов"],
+      ],
+    ],
+    [
+      "Кнопки и навигация",
+      [
+        ["button", "Фон кнопок и тарифов"],
+        ["buttonText", "Текст кнопок и тарифов"],
+        ["icon", "Иконки"],
+        ["accent", "Акцент и рамка выбора"],
+      ],
+    ],
+    [
+      "Состояния",
+      [
+        ["success", "Успешные действия"],
+        ["danger", "Ошибки и удаление"],
+        ["unlimitedBadge", "Значок «Безлимит»"],
+      ],
+    ],
+  ];
+  return `<div class="appearance-theme">
 		${renderAdminBackgroundOptions(currentMode)}
 		${renderAdminBackgroundControls(currentMode)}
 		<div class="admin-toggle-list">${renderAdminToggle("Показывать рамки", "appearance.showFrames")}${renderAdminToggle(localizedText("Свечение", "Glow", "درخشش"), "appearance.glow")}${renderAdminToggle(localizedText("Стекло", "Glass", "شیشه"), "appearance.glass")}</div>
 		${renderAdminBottomNavStyles()}
 		${renderAdminAppearancePresets()}
 		<div class="admin-appearance-groups">${groups.map(([title, colors]) => `<section class="admin-editor__section admin-appearance-group"><h3>${escapeHtml(title)}</h3><div class="admin-color-grid">${colors.map(([key, label]) => renderAdminColorField(label, `appearance.colors.${key}`)).join("")}</div></section>`).join("")}</div>
-	`);
+	</div>`;
 }
 
 let landingBackgroundURL = "";
@@ -7856,6 +7929,7 @@ function syncLandingPalettePreview() {
   ])
     preview.style.setProperty(`--preview-${name}`, l.colors[key]);
   preview.style.setProperty("--preview-radius", `${l.buttonRadius}px`);
+  preview.style.setProperty("--preview-button-text", previewButtonColor(l.colors.accent));
 }
 async function syncCursorDemo() {
   const a = state.adminSettingsDraft?.appearance;
@@ -11834,6 +11908,7 @@ function bindRootActions() {
 				}
 				return analytics ? await refreshAdminAnalytics() : await refreshAdminFinance();
 			}
+			if (action === "admin-appearance-tab") { if (!["theme", "landing", "cursors"].includes(value)) return; state.adminAppearanceTab = value; render({preserveScroll:false,scrollTop:0}); return; }
 			if (action === "admin-landing-tab") { state.adminLandingTab=value; render({preserveScroll:true});return; }
  if (action === "admin-cursor-surface") {state.adminCursorSurface=value;render({preserveScroll:true});return;}
  if (action === "admin-cursor-preset") {ensureSurfaceSettings(state.adminSettingsDraft.appearance); const c=state.adminSettingsDraft.appearance.cursors[state.adminCursorSurface];c.mode=value;state.adminSettingsDirty=true;applyAppearance();render({preserveScroll:true});return;}

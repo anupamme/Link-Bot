@@ -1,19 +1,30 @@
 .surface-tabs {
   display: flex;
-  flex-wrap: wrap;
+  flex-wrap: nowrap;
   gap: 4px;
-  margin-bottom: 12px;
+  min-width: 0;
+  max-width: 100%;
+  overflow-x: auto;
+  scrollbar-width: none;
+  margin: 0;
 }
 .surface-tabs > button {
-  padding: 8px 12px;
-  border: 1px solid var(--line, #303034);
-  border-radius: 4px;
-  background: var(--surface, #101113);
-  color: var(--text, #eef1f5);
-  font: inherit;
+  flex: 0 0 auto;
+  min-height: 38px;
+  padding: 0 12px;
+  border: 1px solid transparent;
+  border-radius: 7px;
+  background: transparent;
+  color: var(--muted);
+  font-family: inherit;
+  font-size: 12px;
+  font-weight: 600;
+  white-space: nowrap;
 }
 .surface-tabs > button[aria-selected="true"] {
-  border-color: var(--accent, #a1a1aa);
+  border-color: var(--line-soft);
+  background: var(--surface-soft);
+  color: var(--text);
 }
 .surface-editor-grid {
   display: grid;
@@ -63,12 +74,14 @@
   margin: 12px 0;
 }
 .cursor-preset {
-  min-height: 78px !important;
+  min-height: 82px !important;
   height: auto !important;
   padding: 10px !important;
-  border: 1px solid var(--line, #303034) !important;
-  background: var(--surface, #101113) !important;
-  border-radius: 4px !important;
+  border: 1px solid var(--line-soft) !important;
+  background: var(--control-bg) !important;
+  color: var(--text) !important;
+  border-radius: 8px !important;
+  line-height: 1.3;
 }
 .cursor-preset,
 .cursor-preset .mantine-Button-inner,
@@ -80,8 +93,8 @@
   gap: 6px;
 }
 .cursor-preset.is-active {
-  border-color: #9da6b3 !important;
-  background: #ffffff08 !important;
+  border-color: var(--accent) !important;
+  background: var(--accent-soft) !important;
 }
 .cursor-preset .cursor-preset__symbol {
   font-size: 24px;
@@ -124,6 +137,7 @@
 }
 .landing-editor-preview > button {
   background: var(--preview-accent, #ba173d) !important;
+  color: var(--preview-button-text, #080b10) !important;
   border-radius: var(--preview-radius, 8px) !important;
   justify-self: start;
 }
@@ -190,6 +204,301 @@
 .rn-content .surface-editor-grid .admin-editor__field {
   display: block;
   margin: 0;
+}
+
+/* Both the Mini App and the native administration use the same form layout. */
+.appearance-settings,
+.appearance-panel,
+.surface-settings,
+.appearance-theme {
+  display: grid;
+  min-width: 0;
+  gap: 14px;
+  align-content: start;
+}
+.rn-content .appearance-settings {
+  grid-column: 1 / -1;
+}
+.appearance-tabs {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  padding: 4px;
+  border: 1px solid var(--line-soft);
+  border-radius: 10px;
+  background: var(--surface-soft);
+}
+.appearance-tabs > button {
+  width: 100%;
+}
+.appearance-tabs > button[aria-selected="true"] {
+  background: var(--control-bg);
+}
+.surface-tabs::-webkit-scrollbar {
+  display: none;
+}
+.surface-tabs > button:focus-visible,
+.cursor-preset:focus-visible,
+.surface-button:focus-visible,
+.surface-upload:focus-within {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+.surface-settings .surface-card,
+.appearance-theme > .admin-editor__section,
+.appearance-theme > .admin-toggle-list,
+.appearance-theme .admin-appearance-group {
+  display: grid;
+  gap: 12px;
+  min-width: 0;
+  margin: 0;
+  padding: 16px;
+  border: 1px solid var(--line-soft);
+  border-radius: 10px;
+  background: var(--surface-soft);
+}
+.appearance-settings .surface-card h3 {
+  margin: 0;
+  color: var(--text);
+  font-size: 14px;
+  font-weight: 650;
+  line-height: 1.4;
+  text-transform: none;
+}
+.surface-settings .surface-card > p,
+.surface-settings .surface-inline p {
+  margin: 0;
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 400;
+  line-height: 1.55;
+}
+.surface-settings .surface-field {
+  display: grid;
+  gap: 7px;
+  min-width: 0;
+  margin: 0;
+}
+.surface-settings .surface-field > span {
+  color: var(--text);
+  font-size: 12px;
+  font-weight: 500;
+  line-height: 1.4;
+}
+.surface-settings .admin-field__control {
+  box-sizing: border-box;
+  width: 100%;
+  min-width: 0;
+  min-height: 40px;
+  padding: 9px 11px;
+  border: 1px solid var(--line-soft);
+  border-radius: 7px;
+  background: var(--control-bg);
+  color: var(--text);
+  font-family: inherit;
+  font-size: 13px;
+  font-weight: 400;
+  line-height: 1.45;
+}
+.surface-settings .admin-field__control:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 1px;
+}
+.surface-settings textarea.admin-field__control {
+  min-height: 90px;
+  resize: vertical;
+}
+.surface-settings .admin-color-grid {
+  gap: 8px;
+}
+.surface-settings .admin-color-field {
+  min-height: 54px;
+  border-radius: 8px;
+}
+.surface-settings .admin-color-field strong {
+  font-size: 11px;
+  line-height: 1.4;
+}
+.surface-settings .admin-color-field em {
+  font-size: 10px;
+}
+.surface-number-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
+}
+.surface-upload {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 42px;
+  margin: 0;
+  padding: 10px 12px;
+  border: 1px dashed var(--line);
+  border-radius: 7px;
+  background: var(--control-bg);
+  color: var(--text);
+  font-size: 12px;
+  font-weight: 500;
+  cursor: pointer;
+}
+.surface-upload .surface-upload__input {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  opacity: 0;
+  overflow: hidden;
+}
+.surface-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  min-height: 40px;
+  padding: 9px 14px;
+  border: 1px solid var(--line-soft);
+  border-radius: 7px;
+  background: var(--control-bg);
+  color: var(--text);
+  font-family: inherit;
+  font-size: 12px;
+  font-weight: 600;
+  line-height: 1.4;
+}
+.surface-settings .surface-button:disabled {
+  opacity: 0.45;
+}
+.surface-settings .cursor-demo > div {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 12px;
+  padding: 16px;
+  border: 1px dashed var(--line);
+  border-radius: 8px;
+  background: var(--control-bg);
+  font-size: 12px;
+}
+.cursor-demo > div > input,
+.cursor-demo > div > .mantine-InputWrapper-root {
+  grid-column: 1 / -1;
+  width: 100%;
+}
+.surface-settings .landing-editor-preview {
+  gap: 16px;
+  padding: 20px;
+  border-radius: 8px;
+}
+.surface-settings .landing-editor-preview > strong {
+  font-size: 22px;
+  line-height: 1.3;
+  overflow-wrap: anywhere;
+}
+.surface-settings .landing-editor-preview > p {
+  margin: 0;
+  font-size: 13px;
+  line-height: 1.6;
+}
+.surface-settings .landing-editor-preview > button {
+  min-height: 42px;
+  max-width: 100%;
+  padding: 10px 14px;
+  white-space: normal;
+}
+.surface-settings .landing-editor-preview small {
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+}
+.surface-settings .landing-editor-preview b {
+  font-size: 13px;
+}
+.surface-settings .landing-editor-preview > div {
+  gap: 6px;
+  padding: 14px;
+  border-radius: 7px;
+}
+.surface-settings .surface-inline > .admin-field__control {
+  flex: 1 1 190px;
+  width: auto;
+}
+.surface-settings .cursor-preset {
+  font-family: inherit;
+  font-size: 12px;
+  font-weight: 600;
+}
+:root[data-admin-console="on"] .surface-settings .surface-card {
+  border-color: #ffffff14;
+  background: linear-gradient(135deg, #101113, #0b0c0e);
+  border-radius: 6px;
+}
+.rn-content .surface-settings .surface-field {
+  display: block;
+}
+.rn-content .surface-button {
+  min-height: 32px;
+  padding: 0 12px;
+}
+.rn-content .landing-editor-preview .surface-button {
+  min-height: 42px;
+  padding: 10px 14px;
+}
+html[data-admin-console="on"]
+  .rn-content
+  .landing-editor-preview
+  .surface-button.mantine-Button-root {
+  height: auto;
+  min-height: 42px;
+  padding: 10px 14px;
+}
+html[data-admin-console="on"] .rn-content .surface-settings .rn-file-picker {
+  width: 100%;
+  height: 40px;
+  padding: 0 12px;
+  font-size: 12px;
+}
+.rn-content .rn-color-field {
+  display: flex;
+  min-height: 54px;
+  border: 1px solid #ffffff14;
+  background: #101113;
+  color: #e8ecf2;
+}
+.rn-content .rn-color-field strong {
+  color: #e8ecf2;
+  font-size: 11px;
+  font-weight: 600;
+}
+.rn-content .rn-color-field em {
+  color: #a8b0bc;
+  font-size: 10px;
+}
+@media (min-width: 1100px) {
+  .appearance-theme {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    align-items: start;
+  }
+  .appearance-theme > :first-child,
+  .appearance-theme > .admin-appearance-groups {
+    grid-column: 1 / -1;
+  }
+}
+@media (max-width: 720px) {
+  .surface-settings .surface-card,
+  .appearance-theme > .admin-editor__section,
+  .appearance-theme > .admin-toggle-list,
+  .appearance-theme .admin-appearance-group {
+    padding: 14px;
+    gap: 12px;
+  }
+  .surface-settings .cursor-demo > div {
+    grid-template-columns: 1fr;
+  }
+  .surface-settings .cursor-demo > div > .surface-button {
+    justify-self: start;
+  }
+  .surface-inline {
+    gap: 10px;
+  }
 }
 .rn-content .surface-editor-grid .rn-field {
   margin: 0;
