@@ -67,7 +67,7 @@ func TestBroadcastAudiencePersistenceAndDraftGuards(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	for _, name := range []string{"000017_broadcast_campaign.up.sql", "000030_broadcast_html.up.sql", "000048_email_link_and_broadcast.up.sql", "000055_broadcast_audience.up.sql"} {
+	for _, name := range []string{"000017_broadcast_campaign.up.sql", "000030_broadcast_html.up.sql", "000048_email_link_and_broadcast.up.sql", "000055_broadcast_audience.up.sql", "000056_broadcast_paid_lookup.up.sql"} {
 		raw, err := os.ReadFile(filepath.Join("..", "..", "db", "migrations", name))
 		if err != nil {
 			t.Fatal(err)
@@ -78,6 +78,41 @@ func TestBroadcastAudiencePersistenceAndDraftGuards(t *testing.T) {
 	}
 	c := NewCustomerRepository(pool)
 	b := NewBroadcastRepository(pool)
+	for _, tc := range []struct {
+		category, language, channel string
+		exclude                     int64
+		want                        int
+	}{
+		{"all", "", "telegram", 0, 1},
+		{"all", "", "telegram", 101, 0},
+		{"all", "", "email", 0, 2},
+		{"all", "en", "email", 0, 1},
+		{"paid", "", "email", 0, 1},
+		{"trial_used", "", "email", 0, 1},
+		{"trial_used", "en", "email", 0, 0},
+	} {
+		a := BroadcastAudience{Category: tc.category, Language: tc.language}
+		count, err := c.CountLocalBroadcastAudience(ctx, a, tc.channel, tc.exclude)
+		if err != nil || count != tc.want {
+			t.Fatalf("local count %+v: %d, %v", tc, count, err)
+		}
+		customers, err := c.LocalBroadcastCustomers(ctx, a)
+		if err != nil {
+			t.Fatal(err)
+		}
+		expected := 0
+		for _, customer := range customers {
+			if tc.channel == "email" && customer.Email != "" || tc.channel == "telegram" && customer.TelegramID > 0 && !customer.Synthetic && customer.TelegramID != tc.exclude {
+				expected++
+			}
+		}
+		if count != expected {
+			t.Fatalf("count differs from send recipients: %+v", tc)
+		}
+	}
+	if _, err := c.CountLocalBroadcastAudience(ctx, BroadcastAudience{Category: "active"}, "telegram", 0); err == nil {
+		t.Fatal("panel audience counted locally")
+	}
 	customers, err := c.BroadcastCustomers(ctx)
 	if err != nil {
 		t.Fatal(err)

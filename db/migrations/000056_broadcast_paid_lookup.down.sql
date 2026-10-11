@@ -1,0 +1,1 @@
+DROP INDEX IF EXISTS purchase_broadcast_paid_customer_idx;

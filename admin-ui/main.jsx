@@ -517,6 +517,7 @@ function convert(node, key) {
         .filter(
           (n) =>
             n !== control &&
+            !(n.nodeType === 1 && n.tagName === "SMALL") &&
             !(n.nodeType === 1 && n.getAttribute("aria-hidden") === "true"),
         )
         .map((n, i) => convert(n, i));
@@ -526,7 +527,9 @@ function convert(node, key) {
           className={`rn-field ${["checkbox", "radio"].includes(control.type) ? "rn-check" : ""} ${fieldClass}`}
           hidden={node.hidden}
         >
-          <Field node={control} label={label} toggle={toggle} />
+          <Field node={control} label={label} toggle={toggle}
+            description={node.querySelector(":scope > small")?.textContent}
+            inputWrapperOrder={["label", "input", "description", "error"]} />
         </div>
       );
     }

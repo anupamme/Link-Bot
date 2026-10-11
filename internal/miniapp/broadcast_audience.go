@@ -75,19 +75,12 @@ func (h *Handler) broadcastCustomers(ctx context.Context, a database.BroadcastAu
 	if err := a.Normalize(); err != nil {
 		return nil, err
 	}
+	if !a.NeedsPanel() {
+		return h.customerRepository.LocalBroadcastCustomers(ctx, a)
+	}
 	customers, err := h.customerRepository.BroadcastCustomers(ctx)
 	if err != nil {
 		return nil, err
-	}
-	needPanel := a.Category == "active" || a.Category == "none" || a.Category == "expired" || a.Category == "trial" || len(a.InternalSquads) > 0 || len(a.ExternalSquads) > 0 || a.Tag != ""
-	if !needPanel {
-		result := customers[:0]
-		for _, c := range customers {
-			if matchesBroadcastCustomer(c, nil, a, "", time.Now(), false) {
-				result = append(result, c)
-			}
-		}
-		return result, nil
 	}
 	if h.remnawaveClient == nil && (len(a.InternalSquads) > 0 || len(a.ExternalSquads) > 0 || a.Tag != "") {
 		return nil, errors.New("Для отбора по сквадам и тегам подключите панель")
@@ -110,7 +103,11 @@ func (h *Handler) broadcastCustomers(ctx context.Context, a database.BroadcastAu
 	}
 	result := []database.BroadcastCustomer{}
 	now := time.Now()
+	trialTag := h.trialSettings().Tag
 	for _, c := range customers {
+		if err := ctx.Err(); err != nil {
+			return nil, err
+		}
 		users := append([]remnawave.PanelUser{}, byTelegram[c.TelegramID]...)
 		for _, s := range c.Subscriptions {
 			matched := false
@@ -126,7 +123,7 @@ func (h *Handler) broadcastCustomers(ctx context.Context, a database.BroadcastAu
 				}
 			}
 		}
-		if matchesBroadcastCustomer(c, users, a, h.trialSettings().Tag, now, h.remnawaveClient != nil) {
+		if matchesBroadcastCustomer(c, users, a, trialTag, now, h.remnawaveClient != nil) {
 			result = append(result, c)
 		}
 	}
@@ -189,7 +186,9 @@ func (h *Handler) handleAdminBroadcastAudience(w http.ResponseWriter, r *http.Re
 	defer cancel()
 	count := 0
 	var err error
-	if req.Channel == "email" {
+	if !req.Audience.NeedsPanel() {
+		count, err = h.customerRepository.CountLocalBroadcastAudience(ctx, req.Audience, req.Channel, sess.User.ID)
+	} else if req.Channel == "email" {
 		var targets []string
 		targets, err = h.broadcastEmailRecipients(ctx, req.Audience)
 		count = len(targets)

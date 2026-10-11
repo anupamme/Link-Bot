@@ -1,0 +1,329 @@
+/* Shared administration layout contract. Keep cabinet and console controls on
+   the same scale; scope everything so customer pages keep their own theme. */
+:is(#page-admin, .rn-content) {
+  --admin-gap: 16px;
+  --admin-control-height: 40px;
+  font-size: 14px;
+  line-height: 1.5;
+}
+html[data-admin-surface="on"] .bg-media { display: none !important; }
+html[data-admin-surface="on"] body { background: var(--bg, #050607); }
+html[data-admin-surface="on"] body::before,
+html[data-admin-surface="on"] body::after { display: none; }
+html[data-admin-surface="on"] .bottom-nav {
+  border-radius: 6px !important;
+  box-shadow: none !important;
+  backdrop-filter: none !important;
+}
+html[data-admin-surface="on"] .admin-save-bar:not(.admin-save-bar--layout-editor):not(.admin-save-bar--widget-layout) {
+  width: auto !important;
+  max-width: calc(100% - 32px) !important;
+  padding: 8px !important;
+}
+html[data-admin-surface="on"] .admin-save-bar:not(.admin-save-bar--layout-editor):not(.admin-save-bar--widget-layout) .admin-save-bar__actions { gap: 12px; }
+html[data-admin-surface="on"] .admin-save-bar:not(.admin-save-bar--layout-editor):not(.admin-save-bar--widget-layout) :is(.admin-save-bar__save, .admin-save-bar__close) {
+  width: auto !important;
+  min-width: 44px !important;
+  padding: 8px 12px !important;
+  display: inline-flex !important;
+  gap: 8px;
+  border-radius: 4px;
+}
+html[data-admin-surface="on"] .admin-save-bar__label { font-size: 13px; line-height: 20px; }
+html[data-admin-surface="on"] :is(.admin-save-bar--layout-editor, .admin-save-bar--widget-layout) .admin-save-bar__label { display: none; }
+html[data-admin-console="off"][data-admin-surface="on"] #page-admin { max-width: 960px !important; margin-inline: auto !important; }
+html[data-admin-console="off"][data-admin-surface="on"] #page-admin:has(.admin-users) { max-width: 1440px !important; }
+:is(#page-admin, .rn-content) button { border-radius: 5px; box-shadow: none; }
+:is(#page-admin, .rn-content) .btn {
+  width: fit-content;
+  min-height: 40px;
+  padding: 10px 16px;
+  border: 0;
+  border-radius: 5px;
+  font-size: 13px;
+  line-height: 20px;
+  justify-self: start;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+:is(#page-admin, .rn-content) .tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  border: 0;
+  border-bottom: 1px solid var(--line-soft);
+  border-radius: 0;
+  padding: 0 0 12px;
+  background: transparent;
+}
+:is(#page-admin, .rn-content) .tabs > button { width: auto; flex: 0 1 auto; min-height: 40px; padding: 8px 14px; font-size: 13px; }
+#page-admin .admin-menu-group__rows { gap: 0; }
+#page-admin .admin-menu-group .menu-row {
+  border: 0;
+  border-bottom: 1px solid var(--line-soft);
+  border-radius: 0;
+  background: transparent;
+  min-height: 48px;
+  padding: 12px 4px;
+}
+#page-admin .admin-menu-group .menu-row:hover { background: var(--surface); }
+#page-admin .admin-menu-group__title > span { background: var(--muted); }
+#page-admin .admin-settings-search__field { border-radius: 5px; }
+html[data-admin-console="on"] .rn-overview { gap: 24px; }
+html[data-admin-console="on"] .rn-overview .mantine-Card-root {
+  border: 0; border-radius: 0; background: transparent; padding: 0; box-shadow: none;
+}
+html[data-admin-console="on"] .rn-overview .rn-metric { padding-block: 12px; border-bottom: 1px solid var(--line-soft); }
+html[data-admin-console="on"] .rn-overview .mantine-ThemeIcon-root { border: 0; background: transparent; }
+html[data-admin-console="on"] .rn-overview .mantine-Button-root { border: 0; border-radius: 5px; }
+html[data-admin-console="on"] .rn-table-card [class*="MRT_TopToolbar-module_actions-container"] {
+  flex-wrap: wrap;
+  gap: 8px;
+  padding: 8px;
+}
+html[data-admin-console="on"] .rn-table-card [class*="MRT_TopToolbar-module_actions-container"] > .mantine-InputWrapper-root {
+  flex: 1 1 240px;
+  margin: 0 !important;
+  min-width: 0;
+}
+html[data-admin-console="on"] .rn-table-card .mrt-toolbar-internal-buttons { flex-wrap: wrap; gap: 4px; }
+html[data-admin-console="on"] .rn-main.page-scroll {
+  padding: 24px 28px 40px !important;
+}
+html[data-admin-console="on"] .rn-page {
+  width: 100%;
+  max-width: 960px;
+  margin-inline: auto;
+}
+html[data-admin-console="on"] .rn-page:has(.rn-table-card, .rn-content[data-section="users"], .rn-content[data-section="finance"], .rn-content[data-section="analytics"]) {
+  max-width: 1440px;
+}
+html[data-admin-console="on"] .rn-page-header {
+  padding: 0 0 20px;
+  min-height: 52px;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+}
+html[data-admin-console="on"] .rn-page-header h4 { font-size: 20px; }
+html[data-admin-console="on"] .rn-page-header .mantine-ThemeIcon-root {
+  background: transparent; border: 0;
+}
+html[data-admin-console="on"] :is(.rn-header-control, .rn-sidebar) {
+  box-shadow: none;
+  background-image: none;
+}
+html[data-admin-console="on"] .rn-header-control { border: 0; }
+html[data-admin-console="on"] .rn-sidebar .mantine-NavLink-root {
+  border: 0;
+  min-height: 36px;
+}
+html[data-admin-console="on"] .rn-sidebar .mantine-NavLink-root[data-active] {
+  background: #ffffff0d;
+  box-shadow: inset 2px 0 #c7c7cc;
+}
+:is(#page-admin, .rn-content) :is(.admin-editor, .admin-integrations, .admin-mail__form, .surface-settings) {
+  gap: 24px;
+}
+:is(#page-admin, .rn-content) :is(.admin-editor__grid, .admin-integration__fields, .admin-user-control-grid, .surface-editor-grid) {
+  display: grid;
+  align-items: start;
+  gap: 20px 16px;
+  margin-block: 16px;
+  min-width: 0;
+}
+:is(#page-admin, .rn-content) :is(.admin-editor__grid--two, .admin-integration__fields) {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+:is(#page-admin, .rn-content) .admin-editor__grid:not(.admin-editor__grid--three) { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+:is(#page-admin, .rn-content) :is(.admin-field, .surface-field, .rn-field) {
+  min-width: 0;
+  margin: 0;
+  align-content: start;
+}
+:is(#page-admin, .rn-content) :is(.admin-field > span, .mantine-InputWrapper-label) {
+  font-size: 13px;
+  font-weight: 500;
+  line-height: 20px;
+  color: var(--text);
+}
+:is(#page-admin, .rn-content) .admin-field > small {
+  margin: 0;
+  font-size: 12px;
+  line-height: 18px;
+  color: var(--muted);
+}
+:is(#page-admin, .rn-content) :is(.admin-field__control, .mantine-Input-input):not([type="checkbox"]):not([type="radio"]):not([type="color"]):not([type="range"]) {
+  width: 100%;
+  min-width: 0;
+  min-height: var(--admin-control-height);
+  border-radius: 5px;
+  font-size: 14px;
+  line-height: 20px;
+  box-shadow: none;
+}
+:is(#page-admin, .rn-content) .admin-field__control {
+  padding: 9px 12px;
+}
+:is(#page-admin, .rn-content) :is(.admin-editor__section, .surface-card, .rn-settings-panel, .admin-feature-group, .admin-ai__card) {
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+  backdrop-filter: none;
+}
+:is(#page-admin, .rn-content) :is(.surface-card, .rn-settings-panel, .admin-feature-group, .admin-ai__card) {
+  padding: 0;
+}
+:is(#page-admin, .rn-content) :is(.admin-editor__section, .admin-broadcast__section) + :is(.admin-editor__section, .admin-broadcast__section) {
+  border-top: 1px solid var(--line-soft);
+  padding-top: 24px;
+}
+:is(#page-admin, .rn-content) :is(.admin-editor__section h3, .surface-card h3, .admin-integrations__label) {
+  font-size: 15px;
+  line-height: 22px;
+  text-transform: none;
+  letter-spacing: 0;
+  color: var(--text);
+  margin: 0 0 12px;
+}
+:is(#page-admin, .rn-content) :is(.surface-card p, .admin-broadcast__section-head small, .admin-integration__summary small) {
+  font-size: 13px;
+  line-height: 20px;
+}
+:is(#page-admin, .rn-content) :is(.admin-integration, .admin-broadcast-button) {
+  border: 0;
+  border-bottom: 1px solid var(--line-soft);
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+}
+:is(#page-admin, .rn-content) .admin-integrations__list { border: 0; border-radius: 0; background: transparent; }
+:is(#page-admin, .rn-content) .admin-integration__summary {
+  padding: 16px 0;
+  min-height: 64px;
+  gap: 12px;
+}
+:is(#page-admin, .rn-content) .admin-integration__body {
+  padding: 8px 0 24px;
+  gap: 20px;
+}
+:is(#page-admin, .rn-content) :is(.admin-broadcast__actions, .admin-mail__actions, .admin-moynalog__actions, .admin-smtp__actions, .admin-ai__actions, .admin-editor__section-head, .surface-inline) {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 12px;
+}
+:is(#page-admin, .rn-content) .admin-editor__section-head > h3 { margin: 0 auto 0 0; }
+:is(#page-admin, .rn-content) :is(.admin-broadcast__actions, .admin-mail__actions, .admin-moynalog__actions, .admin-smtp__actions) {
+  margin-top: 20px;
+}
+:is(#page-admin, .rn-content) :is(.surface-button, .rn-adapted-button, .admin-broadcast__primary, .admin-broadcast__secondary, .admin-broadcast__reset, .admin-mail__button, .admin-editor__save) {
+  min-height: var(--admin-control-height);
+  height: auto;
+  max-width: 100%;
+  width: fit-content;
+  justify-self: start;
+  flex: 0 1 auto;
+  padding: 9px 14px;
+  border: 0;
+  border-radius: 5px;
+  font-size: 13px;
+  font-weight: 600;
+  line-height: 20px;
+  box-shadow: none;
+  white-space: normal;
+  transform: none;
+  transition: background-color 180ms ease, color 180ms ease;
+}
+:is(#page-admin, .rn-content) .mantine-Button-label { white-space: normal; overflow: visible; }
+:is(#page-admin, .rn-content) .mantine-Button-label { gap: 8px; }
+:is(#page-admin, .rn-content) :is(.admin-ai__button, .admin-partners__create-fields > button, .admin-subpage-add, .admin-users__more, .admin-access__add) {
+  width: fit-content;
+  justify-self: start;
+  flex: 0 1 auto;
+  min-height: 40px;
+  padding: 9px 14px;
+  border: 0;
+  border-radius: 5px;
+  font-size: 13px;
+  line-height: 20px;
+}
+:is(#page-admin, .rn-content) :is(.admin-ai__power, .rn-ai-power, .admin-subscription-panel, .admin-localization__preview, .admin-status__overview, .admin-status__section, .admin-status__service, .admin-partner-entry, .admin-finance-provider) {
+  border: 0 !important;
+  border-radius: 0 !important;
+  box-shadow: none !important;
+  background: transparent !important;
+  backdrop-filter: none !important;
+  background-image: none !important;
+}
+:is(#page-admin, .rn-content) :is(.admin-ai__power, .rn-ai-power, .admin-subscription-panel, .admin-status__overview, .admin-status__section, .admin-status__service, .admin-partner-entry) { padding-inline: 0; }
+:is(#page-admin, .rn-content) :is(.admin-status__section, .admin-status__service, .admin-partner-entry, .admin-finance-provider) { border-bottom: 1px solid var(--line-soft) !important; }
+:is(#page-admin, .rn-content) :is(.admin-status__overview > i, .admin-status__service-icon) { box-shadow: none; background-image: none; }
+:is(#page-admin, .rn-content) :is(.admin-status__service-metrics span, .admin-status__rows span, .admin-status__rows strong, .admin-status__overview span, .admin-status__service-head small, .admin-status__badge, .admin-finance-provider__head small, .admin-finance-provider__refund, .admin-squads__hint) { font-size: 12px; line-height: 18px; }
+:is(#page-admin, .rn-content) :is(.admin-status__overview strong, .admin-status__service-head strong, .admin-finance-provider__head strong) { font-size: 13px; line-height: 20px; }
+:is(#page-admin, .rn-content) :is(.admin-broadcast__reset, .admin-broadcast__reset.rn-adapted-button) {
+  margin: 12px 0 0;
+}
+:is(#page-admin, .rn-content) button:hover { transform: none; }
+:is(#page-admin, .rn-content) :is(button, input, select, textarea, summary):focus-visible {
+  outline: 2px solid var(--text);
+  outline-offset: 3px;
+}
+:is(#page-admin, .rn-content) :is(.surface-tabs, .admin-broadcast__tabs, .rn-native-tabs .mantine-Tabs-list) {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  padding: 0 0 12px;
+  margin: 0 0 20px;
+  border: 0;
+  border-bottom: 1px solid var(--line-soft);
+  border-radius: 0;
+  background: transparent;
+}
+:is(#page-admin, .rn-content) :is(.surface-tabs, .admin-broadcast__tabs, .rn-native-tabs) button {
+  flex: 0 1 auto;
+  width: auto;
+  min-height: 40px;
+  padding: 8px 14px;
+  border: 0;
+  border-radius: 4px;
+  box-shadow: none;
+}
+:is(#page-admin, .rn-content) .audience-editor { gap: 16px; padding-bottom: 24px; border-bottom: 1px solid var(--line-soft); }
+:is(#page-admin, .rn-content) .audience-editor > .surface-inline { align-items: flex-start; }
+:is(#page-admin, .rn-content) .audience-editor > .surface-inline > div { flex: 1 1 360px; }
+:is(#page-admin, .rn-content) .audience-editor .admin-editor__grid { grid-template-columns: 2fr 1fr 1fr; margin: 0; }
+:is(#page-admin, .rn-content) .audience-count {
+  padding: 0;
+  border: 0;
+  background: transparent;
+  font-size: 13px;
+  line-height: 22px;
+}
+:is(#page-admin, .rn-content) .audience-editor details { margin: 0; }
+:is(#page-admin, .rn-content) .audience-editor summary { min-height: 40px; padding-block: 8px; }
+:is(#page-admin, .rn-content) .audience-error { color: var(--danger, #ef9a9a); margin: 12px 0 0; font-size: 13px; }
+:is(#page-admin, .rn-content) .admin-broadcast-button__style { display: flex; flex-wrap: wrap; gap: 8px; }
+:is(#page-admin, .rn-content) .admin-broadcast-button__style button { flex: 0 1 auto; width: auto; }
+:is(#page-admin, .rn-content) .admin-feature-group__header > span { border: 0; background: transparent; }
+:is(#page-admin, .rn-content) .rn-settings-grid { gap: 32px; }
+:is(#page-admin, .rn-content) .rn-panel-heading .mantine-ThemeIcon-root { background: transparent; border: 0; }
+:is(#page-admin, .rn-content) :is(.admin-broadcast__status, .admin-broadcast__step) { border: 0; background: transparent; border-radius: 0; }
+:is(#page-admin, .rn-content) .admin-integration__save { min-height: 40px; width: fit-content; padding: 9px 16px; border: 0; border-radius: 5px; font-size: 13px; justify-self: start; }
+@media (max-width: 700px) {
+  html[data-admin-console="on"] .rn-main.page-scroll { padding: 20px 16px 32px !important; }
+  :is(#page-admin, .rn-content) :is(.admin-editor__grid, .admin-editor__grid--two, .admin-editor__grid--three, .admin-integration__fields, .audience-editor .admin-editor__grid, .surface-editor-grid, .rn-settings-grid) {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  :is(#page-admin, .rn-content) .admin-field--full { grid-column: auto; }
+  :is(#page-admin, .rn-content) .audience-editor > .surface-inline > div { flex-basis: 100%; }
+  :is(#page-admin, .rn-content) { --admin-control-height: 44px; }
+  :is(#page-admin, .rn-content) :is(.admin-field__control, .mantine-Input-input) { font-size: 16px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  :is(#page-admin, .rn-content) *, html[data-admin-console="on"] .rn-page { animation: none !important; transition: none !important; }
+}

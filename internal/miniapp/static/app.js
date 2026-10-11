@@ -2737,7 +2737,7 @@ const state = {
   adminSubscriptionTargetResult: null,
   adminSubscriptionDestination: "",
   adminBusy: "",
-	adminAppearanceTab:"theme", adminLandingTab:"colors", adminCursorSurface:"landing", adminAudienceDraft:{}, adminAudienceCount:{}, adminAudienceOptions:null, adminAudienceBusy:false,
+	adminAppearanceTab:"theme", adminLandingTab:"colors", adminCursorSurface:"landing", adminAudienceDraft:{}, adminAudienceCount:{}, adminAudienceOptions:null, adminAudienceBusy:false, adminAudienceError:{}, adminAudienceChecking:"",
 	adminBroadcast: null,
 	adminBroadcastTab: readSetting(STORAGE_KEYS.adminBroadcastTab, "telegram") === "email" ? "email" : "telegram",
 	adminEmailBroadcast: null,
@@ -4941,6 +4941,7 @@ function render({ preserveScroll = true, scrollTop = null, preserveInteraction =
   unmountFinanceCharts();
   if (!consoleActive || !state.data) unmountRemnaAdmin();
   document.documentElement.dataset.adminConsole = consoleActive ? "on" : "off";
+  document.documentElement.dataset.adminSurface = consoleActive || state.currentPage === "admin" ? "on" : "off";
   applyAppearance();
   if (isInstallGuideMode()) {
     app.innerHTML = renderInstallGuidePage();
@@ -8055,7 +8056,7 @@ function renderCurrentAudience(channel, running) {
     state.adminAudienceCount[channel],
     running || state.adminAudienceBusy,
     channel,
-    surfaceHelpers,
+    { ...surfaceHelpers, checking: state.adminAudienceChecking === channel, error: state.adminAudienceError[channel] },
   );
 }
 function updateBroadcastAudience(input) {
@@ -8099,6 +8100,8 @@ async function loadAudienceOptions() {
 async function checkBroadcastAudience(channel) {
   if (state.adminAudienceBusy) return false;
   state.adminAudienceBusy = true;
+  state.adminAudienceChecking = channel;
+  state.adminAudienceError[channel] = "";
   render({ preserveScroll: true });
   try {
     const response = await post("/api/mini-app/admin/broadcast/audience", {
@@ -8119,10 +8122,12 @@ async function checkBroadcastAudience(channel) {
     return true;
   } catch (error) {
     state.adminAudienceCount[channel] = null;
+    state.adminAudienceError[channel] = error.message || "Не удалось проверить аудиторию. Повторите подсчёт.";
     showToast(error.message || "Не удалось проверить аудиторию", "danger");
     return false;
   } finally {
     state.adminAudienceBusy = false;
+    state.adminAudienceChecking = "";
     render({ preserveScroll: true });
   }
 }
@@ -8544,7 +8549,7 @@ function renderAdminSaveBar(className = "", entering = false) {
 	const cancelAction = state.adminLayoutEditing ? "admin-layout-exit" : state.adminPlanEditing ? "admin-plan-exit" : "admin-cancel-settings";
 	const saveLabel = localizedText("Сохранить изменения", "Save changes", "ذخیره تغییرات");
 	const cancelLabel = localizedText("Отменить изменения и выйти", "Discard changes and exit", "لغو تغییرات و خروج");
-	return `<nav class="bottom-nav bottom-nav--editor ${entering ? "bottom-nav--entering" : ""} admin-save-bar ${className}" aria-label="${escapeAttribute(localizedText("Действия редактора", "Editor actions", "اقدامات ویرایشگر"))}"><span class="sr-only" role="status" aria-live="polite">${escapeHtml(status)}</span><div class="admin-save-bar__actions">${moreButton}<button class="admin-save-bar__save" type="button" data-action="admin-save-settings" ${busy || !state.adminSettingsDirty ? "disabled" : ""} aria-label="${escapeAttribute(saveLabel)}" title="${escapeAttribute(saveLabel)}">${icon("check")}</button><button class="admin-save-bar__close" type="button" data-action="${cancelAction}" ${busy ? "disabled" : ""} aria-label="${escapeAttribute(cancelLabel)}" title="${escapeAttribute(cancelLabel)}">${icon("close")}</button></div></nav>${renderAdminLayoutAddMenu()}`;
+	return `<nav class="bottom-nav bottom-nav--editor ${entering ? "bottom-nav--entering" : ""} admin-save-bar ${className}" aria-label="${escapeAttribute(localizedText("Действия редактора", "Editor actions", "اقدامات ویرایشگر"))}"><span class="sr-only" role="status" aria-live="polite">${escapeHtml(status)}</span><div class="admin-save-bar__actions">${moreButton}<button class="admin-save-bar__save" type="button" data-action="admin-save-settings" ${busy || !state.adminSettingsDirty ? "disabled" : ""} aria-label="${escapeAttribute(saveLabel)}" title="${escapeAttribute(saveLabel)}">${icon("check")}<span class="admin-save-bar__label">${localizedText("Сохранить", "Save", "ذخیره")}</span></button><button class="admin-save-bar__close" type="button" data-action="${cancelAction}" ${busy ? "disabled" : ""} aria-label="${escapeAttribute(cancelLabel)}" title="${escapeAttribute(cancelLabel)}">${icon("close")}<span class="admin-save-bar__label">${localizedText("Отмена", "Cancel", "لغو")}</span></button></div></nav>${renderAdminLayoutAddMenu()}`;
 }
 
 function renderAdminPlanSaveBar(entering = false) {
