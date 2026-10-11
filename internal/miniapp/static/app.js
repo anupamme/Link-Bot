@@ -7063,10 +7063,10 @@ function broadcastKindLabel(kind, english) {
 }
 
 function renderAdminMaintenancePage() {
-	return renderAdminEditorPage("Режим аварии", `
+	return renderAdminEditorPage("Режим аварии", `<div class="admin-maintenance-editor">
 		${renderAdminToggle("Технические работы включены", "maintenance.enabled")}
 		${renderAdminSettingField("Текст под заголовком «Технические работы»", "maintenance.textRu", { textarea: true, rows: 3 })}
-	`);
+	</div>`);
 }
 
 function renderAdminFeaturesPage() {
@@ -8316,11 +8316,11 @@ function renderInternalSquadSelector(selectedValues, inputKey, emptyMeansAll = t
 	const allSelected = emptyMeansAll && selected.length === 0;
 	if (!squads.length) return `<div class="admin-squads__empty">Список внутренних сквадов недоступен</div>`;
 	const selectedCount = allSelected ? squads.length : squads.filter((squad) => selected.includes(String(squad.uuid))).length;
-	const hint = emptyMeansAll
+	const hint = inputKey === "admin-trial-internal-squad" || inputKey === "admin-grace-internal-squad" ? "" : emptyMeansAll
 		? "Если выбраны все, новые пользователи добавляются во все внутренние сквады."
 		: "Выберите один или несколько сквадов для временного доступа.";
 	const everySelected = selectedCount === squads.length;
-	return `<div class="admin-squad-selector" data-squad-selector="${escapeAttribute(inputKey)}"><div class="admin-squads__toolbar"><button class="${everySelected ? "is-all-selected" : ""}" type="button" data-action="admin-select-all-squads" data-value="${escapeAttribute(inputKey)}" aria-pressed="${everySelected}" aria-label="${everySelected ? "Снять выбор со всех сквадов" : "Выбрать все сквады"}">${icon("check")}Выбрать все</button><span>${selectedCount} из ${squads.length}</span></div><div class="admin-squads__list">${squads.map((squad) => `<label class="admin-squad-option"><input type="checkbox" data-input="${escapeAttribute(inputKey)}" value="${escapeAttribute(squad.uuid)}" ${allSelected || selected.includes(String(squad.uuid)) ? "checked" : ""}><span><strong>${escapeHtml(squad.name || "Без названия")}</strong></span></label>`).join("")}</div><p class="admin-squads__hint">${hint}</p></div>`;
+	return `<div class="admin-squad-selector" data-squad-selector="${escapeAttribute(inputKey)}"><div class="admin-squads__toolbar"><button class="${everySelected ? "is-all-selected" : ""}" type="button" data-action="admin-select-all-squads" data-value="${escapeAttribute(inputKey)}" aria-pressed="${everySelected}" aria-label="${everySelected ? "Снять выбор со всех сквадов" : "Выбрать все сквады"}">${icon("check")}Выбрать все</button><span>${selectedCount} из ${squads.length}</span></div><div class="admin-squads__list">${squads.map((squad) => `<label class="admin-squad-option"><input type="checkbox" data-input="${escapeAttribute(inputKey)}" value="${escapeAttribute(squad.uuid)}" ${allSelected || selected.includes(String(squad.uuid)) ? "checked" : ""}><span><strong>${escapeHtml(squad.name || "Без названия")}</strong></span></label>`).join("")}</div>${hint ? `<p class="admin-squads__hint">${hint}</p>` : ""}</div>`;
 }
 
 function adminSquadSelection(inputKey) {
@@ -8435,7 +8435,6 @@ function renderAdminGracePage() {
 		<div class="admin-editor__grid">${renderAdminSettingField("Срок, дней", "grace.days", { type: "number", min: 0, max: 365 })}</div>
 		<section class="admin-squads">
 			<h3>Внутренние сквады</h3>
-			<p class="admin-squads__hint">После окончания основной подписки выбранные сквады выдаются один раз на указанный срок.</p>
 			${renderInternalSquadSelector(grace.internalSquadUuids, "admin-grace-internal-squad", false)}
 		</section>
 	</div>`);

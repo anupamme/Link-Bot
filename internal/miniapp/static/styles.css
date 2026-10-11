@@ -14175,3 +14175,22 @@ body.is-layout-editing .layout-editor-grid { background: none; }
 :root[data-glass="on"] .admin-localization-menu {
   backdrop-filter: var(--glass-menu-backdrop); -webkit-backdrop-filter: var(--glass-menu-backdrop);
 }
+
+/* Trial, grace access and maintenance fields share the card glass material. */
+:root[data-glass="on"] :is(.admin-trial-editor, .admin-maintenance-editor) .admin-field__control,
+:root[data-glass="on"] #page-admin .admin-event {
+  background: var(--glass-background);
+  background-image: var(--glass-texture);
+  background-size: 128px 128px, 100% 100%;
+  border-color: var(--glass-border);
+  box-shadow: var(--glass-surface-shadow);
+  backdrop-filter: var(--glass-backdrop);
+  -webkit-backdrop-filter: var(--glass-backdrop);
+}
+:root[data-glass="on"] #page-admin .admin-event {
+  padding: 14px; border: 1px solid var(--glass-border); border-radius: 12px;
+}
+:root[data-glass="on"] #page-admin .admin-event--critical {
+  box-shadow: inset 2px 0 0 var(--danger), var(--glass-surface-shadow);
+}
+:root[data-glass="on"] #page-admin .admin-event-list { gap: 10px; }
