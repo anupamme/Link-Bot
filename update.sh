@@ -212,16 +212,19 @@ if ! command -v curl >/dev/null 2>&1; then
 fi
 
 verify_https() {
-  local host=$1 path=$2 label=$3
+  local host=$1 path=$2 label=$3 attempt last_error=""
   for ((attempt = 1; attempt <= 6; attempt++)); do
-    if curl --noproxy '*' --silent --fail --output /dev/null --max-time 4 \
-      --resolve "${host}:443:127.0.0.1" "https://${host}${path}"; then
+    if last_error=$(curl --noproxy '*' --silent --show-error --fail --output /dev/null --max-time 4 \
+      --resolve "${host}:443:127.0.0.1" "https://${host}${path}" 2>&1); then
       printf '%s HTTPS is ready: https://%s%s\n' "$label" "$host" "$path"
       return 0
     fi
     if ((attempt < 6)); then sleep 3; fi
   done
-  printf '%s HTTPS is not ready at https://%s%s. Check docker logs link-bot-caddy for certificate errors.\n' "$label" "$host" "$path" >&2
+  printf '%s HTTPS is not ready at https://%s%s.\n' "$label" "$host" "$path" >&2
+  printf 'Last HTTPS check: %s\n' "$last_error" >&2
+  printf 'Check application startup: docker logs --tail 100 link-bot\n' >&2
+  printf 'Check proxy/TLS: docker logs --tail 100 link-bot-caddy\n' >&2
   return 1
 }
 
