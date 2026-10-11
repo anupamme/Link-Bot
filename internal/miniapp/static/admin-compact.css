@@ -136,3 +136,43 @@ html[data-admin-console="on"] .rn-main :is(.rn-clickable-card, .rn-settings-pane
 }
 #app :is(.admin-plan-modal, .admin-profile-modal) textarea.admin-field__control { padding: 8px 10px; border-radius: 7px; }
 #app :is(.admin-plan-modal__save, .admin-profile-modal__footer .btn) { min-height: 36px; padding: 8px 10px; border-radius: 7px; }
+
+/* Administrator roles and their activity journal use the same compact surfaces. */
+#app :is(#page-admin, .rn-content) .admin-access { gap: 12px; }
+#app :is(#page-admin, .rn-content) .admin-access .admin-access__header { min-height: 34px; }
+#app :is(#page-admin, .rn-content) .admin-access .admin-access__permissions { padding: 10px; gap: 6px; }
+#app :is(#page-admin, .rn-content) .admin-access__permissions header { padding: 0 2px 4px; }
+#app :is(#page-admin, .rn-content) .admin-access__permission {
+  min-height: 38px; padding: 8px 10px; gap: 10px;
+  border: 1px solid var(--line-soft); border-radius: 7px; background: var(--surface);
+}
+#app :is(#page-admin, .rn-content) .admin-access__permission input { right: 10px; width: 18px; height: 18px; }
+#app :is(#page-admin, .rn-content) .admin-access__permission > i { width: 18px; height: 18px; border-radius: 5px; background: var(--surface); }
+#app :is(#page-admin, .rn-content) .admin-access__permission input:checked + i { border-color: var(--accent); color: var(--accent); background: var(--accent-soft); }
+#app :is(#page-admin, .rn-content) .admin-access__permission input:checked + i svg { color: var(--accent); }
+#app :is(#page-admin, .rn-content) .admin-access__permission:has(input:disabled) { cursor: default; }
+#app :is(#page-admin, .rn-content) .admin-access__person { gap: 10px; }
+#app :is(#page-admin, .rn-content) .admin-access__person .admin-user-avatar { width: 42px; height: 42px; }
+#app :is(#page-admin, .rn-content) .admin-access__row { min-height: 54px; padding: 8px 10px; grid-template-columns: 36px minmax(0, 1fr) minmax(64px, 100px) 17px; border: 1px solid var(--line); border-radius: 10px; background: var(--surface); }
+#app :is(#page-admin, .rn-content) .admin-access__row .admin-user-avatar { width: 36px; height: 36px; }
+#app :is(#page-admin, .rn-content) .admin-access .admin-users__search { min-height: 36px; padding-inline: 10px; border-radius: 7px; background: var(--surface); }
+#app :is(#page-admin, .rn-content) .admin-access .admin-users__search input { min-height: 36px; height: 36px; }
+#app :is(#page-admin, .rn-content) .admin-access__tabs { padding: 3px; gap: 3px; border-radius: 10px; background: var(--surface); }
+#app :is(#page-admin, .rn-content) .admin-access__tabs .tab { min-height: 32px; padding: 7px 10px; border-radius: 7px; }
+#app :is(#page-admin, .rn-content) .admin-access__tabs .switch-selection { border-radius: 7px; border-color: var(--line); background: var(--surface-strong); }
+#app :is(#page-admin, .rn-content) :is(
+  .admin-access__presets button, .admin-access__permissions-head button,
+  .admin-access__permissions header button, .admin-access__save, .admin-access__add,
+  .admin-access__remove button, .admin-access__error button
+) { min-height: 36px; padding: 8px 10px; border: 1px solid var(--line); border-radius: 7px; background: var(--surface); }
+#app :is(#page-admin, .rn-content) .admin-access__presets button.is-selected { border-color: var(--accent); }
+#app :is(#page-admin, .rn-content) .admin-access__color { gap: 8px; }
+#app :is(#page-admin, .rn-content) .admin-access__color > div { gap: 8px; }
+#app :is(#page-admin, .rn-content) .admin-activity__toolbar { grid-template-columns: minmax(0, 1fr) 36px; }
+#app :is(#page-admin, .rn-content) .admin-activity__toolbar > button { min-height: 36px; border-radius: 7px; background: var(--surface); }
+#app :is(#page-admin, .rn-content) .admin-activity__filter .admin-localization-select { width: auto; flex: 1; max-width: 70%; font-weight: 600; }
+#app :is(#page-admin, .rn-content) .admin-activity__filter small { flex: 0 0 auto; order: 1; }
+#app :is(#page-admin, .rn-content) .admin-activity__entry { border-radius: 10px; }
+#app :is(#page-admin, .rn-content) .admin-activity__entry > summary { padding: 9px 10px; grid-template-columns: 22px minmax(0, 1fr) auto; }
+#app :is(#page-admin, .rn-content) .admin-activity__body { padding: 0 10px 10px; gap: 8px; }
+#app :is(#page-admin, .rn-content) .admin-access :is(button, summary):focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }

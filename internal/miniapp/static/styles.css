@@ -14303,3 +14303,19 @@ body.is-layout-editing .layout-editor-grid { background: none; }
   -webkit-backdrop-filter: var(--glass-backdrop);
 }
 :root[data-glass="on"] .admin-subpage :is(.admin-subpage-builtins__client.is-priority, .admin-subpage-priority.is-active) { border-color: var(--accent); }
+
+/* Administrator cards, permission rows and activity follow the cabinet material. */
+:root[data-glass="on"] .admin-access :is(
+  .admin-access-card, .admin-access__row, .admin-access__permission,
+  .admin-access__back, .admin-access__presets button,
+  .admin-access__permissions-head button, .admin-access__permissions header button,
+  .admin-access__save, .admin-access__add, .admin-access__remove button,
+  .admin-access__error, .admin-access__error button, .admin-access__tabs .switch-selection,
+  .admin-activity__toolbar > button, .admin-activity__entry
+) {
+  background: var(--glass-background) !important; background-image: var(--glass-texture) !important;
+  background-size: 128px 128px, 100% 100%; border-color: var(--glass-border) !important;
+  box-shadow: var(--glass-surface-shadow); backdrop-filter: var(--glass-backdrop);
+  -webkit-backdrop-filter: var(--glass-backdrop);
+}
+:root[data-glass="on"] .admin-access .admin-access__presets button.is-selected { border-color: var(--accent) !important; }
