@@ -1,6 +1,6 @@
 const twinkleCanvas = document.querySelector(".bg-media__twinkle-canvas");
 
-function createTwinkleBackground(canvas) {
+export function createTwinkleBackground(canvas) {
 	if (!canvas) return null;
 	const context = canvas.getContext("2d", { alpha: true });
 	if (!context) return null;
@@ -121,13 +121,19 @@ function createTwinkleBackground(canvas) {
 		if (paused) draw(performance.now());
 	}
 
-	window.addEventListener("resize", () => {
+	function onResize() {
 		window.clearTimeout(resizeTimer);
 		resizeTimer = window.setTimeout(resize, 120);
-	}, { passive: true });
+	}
+	const observer = new ResizeObserver(onResize);
+	observer.observe(canvas.parentElement);
 
 	resize();
-	return { setConfig, setPaused };
+	return { setConfig, setPaused, destroy() {
+		setPaused(true);
+		window.clearTimeout(resizeTimer);
+		observer.disconnect();
+	} };
 }
 
 const twinkleBackground = createTwinkleBackground(twinkleCanvas);

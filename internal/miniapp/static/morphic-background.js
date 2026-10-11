@@ -1,6 +1,6 @@
 const morphicParticleLayer = document.querySelector(".bg-media__morphic-particles");
 
-function createMorphicBackground(target) {
+export function createMorphicBackground(target) {
 	if (!target) return null;
 
 	let particles = [];
@@ -148,13 +148,20 @@ function createMorphicBackground(target) {
 		if (!particles.length) seed();
 	}
 
-	window.addEventListener("resize", () => {
+	function onResize() {
 		window.clearTimeout(resizeTimer);
 		resizeTimer = window.setTimeout(seed, 120);
-	}, { passive: true });
+	}
+	const observer = new ResizeObserver(onResize);
+	observer.observe(target);
 
 	seed();
-	return { setConfig, setPaused };
+	return { setConfig, setPaused, destroy() {
+		setPaused(true);
+		window.clearTimeout(resizeTimer);
+		observer.disconnect();
+		clearParticles();
+	} };
 }
 
 const morphicBackground = createMorphicBackground(morphicParticleLayer);

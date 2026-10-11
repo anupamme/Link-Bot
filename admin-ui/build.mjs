@@ -92,6 +92,13 @@ await writeFile(
   (await readFile(financeBundle, "utf8")).replace(/[\t ]+$/gm, ""),
 );
 // Keep the corresponding frontend source available with every shipped build.
+// Landing presets use the cabinet's canonical geometry and effects.
+const cabinetCSS = await readFile(path.join(path.dirname(out), "styles.css"), "utf8");
+const presetStart = cabinetCSS.indexOf("\n.bg-media__blocks {");
+const presetEnd = cabinetCSS.indexOf("\n.bg-media__shade {", presetStart);
+if (presetStart < 0 || presetEnd < 0) throw new Error("Background preset styles are missing");
+await writeFile(path.join(path.dirname(out), "background-presets.css"),
+  "/* Generated from styles.css by admin-ui/build.mjs. */\n" + cabinetCSS.slice(presetStart, presetEnd));
 const archive = {};
 for (const filename of await readdir(root)) {
   if (

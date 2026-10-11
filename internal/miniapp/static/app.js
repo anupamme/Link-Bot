@@ -16,6 +16,7 @@ import { reviewRewardDraft, reviewRewardsFromDraft, reviewRewardSummary } from "
 import { syncTelegramLayout } from "./telegram-layout.mjs";
 import { renderSMTPSettings } from "./admin-smtp.mjs";
 import { syncCustomBackground, probeBackground, draggedPosition } from "./custom-background.mjs";
+import { DEFAULT_BACKGROUND_MOTION, presetBackgroundColors } from "./background-palette.mjs";
 import {applyCustomCursor,cursorValues} from "./custom-cursor.mjs";
 import {ensureSurfaceSettings,renderCursorEditor,renderLandingEditor,renderAudienceEditor,previewButtonColor} from "./surface-editors.mjs";
 import { renderCustomBackgroundEditor } from "./custom-background-editor.mjs";
@@ -1982,17 +1983,6 @@ const ADMIN_LAYOUT_DEFAULTS = [
 ].map(([area, id, order, width, height, framed, align, group]) => ({ area, id, order, visible: true, width, height, framed, align, offsetX: 0, offsetY: 0, ...(area === "dashboard" ? { cornerRadius: id === "subscription_switcher" ? 15 : (["primary_action", "secondary_action", "traffic", "devices"].includes(id) ? 22 : 0), textScale: 100, textOffsetX: 0, textOffsetY: 0, layer: 0 } : {}), ...(group ? { group } : {}) }));
 ADMIN_LAYOUT_DEFAULTS.push({ area: "dashboard", id: "promo_widget", order: 18, visible: false, width: 42, height: 92, framed: false, align: "center", offsetX: 0, offsetY: 0, promoCode: "", iconBubble: true, cornerRadius: 10, textScale: 100, textOffsetX: 0, textOffsetY: 0, layer: 0 });
 ADMIN_LAYOUT_DEFAULTS.push({ area: "dashboard", id: "notification_widget", order: 19, visible: false, width: 42, height: 92, framed: false, align: "center", offsetX: 0, offsetY: 0, notificationText: "", iconBubble: true, cornerRadius: 10, textScale: 100, textOffsetX: 0, textOffsetY: 0, layer: 0 });
-
-const DEFAULT_BACKGROUND_MOTION = Object.freeze({
-	animated: { dimming: 12, speed: 45 },
-	grid: { dimming: 14, speed: 50 },
-	grid2: { dimming: 14, speed: 50 },
-	blocks: { dimming: 0, speed: 35 },
-	morphic: { dimming: 0, speed: 42 },
-	twinkle: { dimming: 0, speed: 38 },
-	backtyan: { dimming: 65, speed: 50 },
-	solid: { dimming: 0, speed: 50 },
-});
 
 const ADMIN_BACKGROUND_OPTIONS = [
 	["animated", "Волны", "Точки и мягкие волны"],
@@ -17847,22 +17837,7 @@ function applyAppearance() {
 		"--glass-selected": colors.surfaceStrong,
 		"--success": colors.success,
 		"--danger": colors.danger,
-		"--grid-background": colors.gridBackground,
-		"--grid-line": colors.gridLine,
-		"--grid-glow-left": colors.gridGlowLeft ? hexToRGBA(colors.gridGlowLeft, 0.28) : "",
-		"--grid-glow-right": colors.gridGlowRight ? hexToRGBA(colors.gridGlowRight, 0.28) : "",
-		"--grid2-background": colors.grid2Background,
-		"--grid2-line": colors.grid2Line,
-		"--grid2-glow": colors.grid2Glow,
-		"--blocks-background": colors.blocksBackground || "#0a0a0c",
-		"--blocks-texture": blocksBackgroundTexture(colors.blocksLeft, colors.blocksRight),
-		"--blocks-preview-texture": blocksBackgroundTexture(colors.blocksLeft, colors.blocksRight, 22),
-		"--morphic-background": colors.morphicBackground || "#000000",
-		"--morphic-ball": colors.morphicBall || "#ff69b4",
-		"--twinkle-background": colors.twinkleBackground || "#000000",
-		"--twinkle-star": colors.twinkleStar || "#ffffff",
-		"--wave-background": colors.waveBackground,
-		"--wave-dot": colors.waveDot,
+		...presetBackgroundColors(colors),
 		"--background-dimming": String(backgroundDimming / 100),
 		"--background-animation-duration": `${backgroundDuration.toFixed(2)}s`,
 		"--background-texture-duration": `${(backgroundDuration * 3.4).toFixed(2)}s`,
@@ -17953,12 +17928,12 @@ function prepareBacktyanVideo(video) {
 function syncBackgroundEngines() {
 	const backgroundMode = document.documentElement.dataset.background || "animated";
 	const paused = document.hidden || state.adminPlanEditing;
-	const waveShouldRun = backgroundMode === "animated" && !paused;
-	particleEngine.setPaused?.(backgroundMode !== "animated" || paused);
+	const reducedBackgroundMotion = Boolean(reducedMotionMedia?.matches || document.documentElement.dataset.performance === "reduced");
+	const waveShouldRun = backgroundMode === "animated" && !paused && !reducedBackgroundMotion;
+	particleEngine.setPaused?.(backgroundMode !== "animated" || paused || reducedBackgroundMotion);
 	const wave = window.__linkBotWave;
 	wave?.pause?.();
 	waveMotionEngine.setPaused(!waveShouldRun);
-	const reducedBackgroundMotion = Boolean(reducedMotionMedia?.matches || document.documentElement.dataset.performance === "reduced");
 	const appearance = getRuntimeSettings()?.appearance;
 	const customBackground = backgroundMode === "custom" ? appearance?.customBackgrounds?.find(item => item.id === appearance.activeBackground) : null;
 	syncCustomBackground(document.querySelector(".bg-media__custom"), customBackground, { paused: paused || reducedBackgroundMotion });
@@ -17986,15 +17961,6 @@ function updateWaveColorFilter(backgroundHex, dotHex) {
 		return [delta * 0.2126, delta * 0.7152, delta * 0.0722, 0, base / 255];
 	});
 	matrix.setAttribute("values", [...rows.flat(), 0, 0, 0, 1, 0].map((value) => Number(value).toFixed(6)).join(" "));
-}
-
-function blocksBackgroundTexture(left, right, step = 72) {
-	const leftColor = `rgb(${hexToRGBComponents(left, [22, 22, 25]).join(",")})`;
-	const rightColor = `rgb(${hexToRGBComponents(right, [12, 12, 14]).join(",")})`;
-	// Rasterize one row once; the compositor only translates the repeated image.
-	// No viewBox: pattern units stay fixed in pixels on every screen width.
-	const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="100%" height="${step}"><defs><linearGradient id="color"><stop stop-color="${leftColor}"/><stop offset="1" stop-color="${rightColor}"/></linearGradient><pattern id="tiles" x="${-step / 4}" width="${step}" height="${step}" patternUnits="userSpaceOnUse"><rect x="${step * .06}" y="${step * .06}" width="${step * .88}" height="${step * .88}" rx="${step * .22}" fill="white"/></pattern><mask id="shape"><rect width="100%" height="100%" fill="url(#tiles)"/></mask></defs><rect width="100%" height="100%" fill="url(#color)" mask="url(#shape)"/></svg>`;
-	return `url("data:image/svg+xml,${encodeURIComponent(svg)}")`;
 }
 
 function hexToRGBComponents(hex, fallback) {

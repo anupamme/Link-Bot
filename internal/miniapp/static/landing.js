@@ -11,7 +11,7 @@
     text: "--text", muted: "--muted", border: "--border", accent: "--accent",
     success: "--success", danger: "--danger",
   };
-  const visualModule=import("./landing-appearance.mjs");
+  const visualModule=import(`./landing-appearance.mjs${assetVersion ? `?v=${encodeURIComponent(assetVersion)}` : ""}`);
  let landingText={};
  let loading = false;
   let previousNodes = "";

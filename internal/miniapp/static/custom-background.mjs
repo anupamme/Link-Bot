@@ -85,7 +85,7 @@ class BackgroundMedia {
         const video = settings.type === "video";
         const media = document.createElement(video ? "video" : "img");
         this.media = media;
-        if (video) { media.muted = true; media.defaultMuted = true; media.loop = true; media.playsInline = true; media.setAttribute("playsinline", ""); media.preload = "auto"; }
+        if (video) { media.muted = true; media.defaultMuted = true; media.loop = true; media.playsInline = true; media.setAttribute("playsinline", ""); media.preload = "auto"; if(settings.poster)media.poster=settings.poster; }
         else { media.alt = ""; media.draggable = false; }
         media.src = url;
         await new Promise((resolve, reject) => {

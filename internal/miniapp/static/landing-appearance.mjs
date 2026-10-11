@@ -1,4 +1,4 @@
-import { syncCustomBackground } from "./custom-background.mjs";
+import { syncPresetBackground } from "./preset-background.mjs";
 import { applyCustomCursor } from "./custom-cursor.mjs";
 let previous = "";
 export function applyLandingAppearance(data) {
@@ -57,38 +57,9 @@ export function applyLandingAppearance(data) {
       host.setAttribute("aria-hidden", "true");
       parent.prepend(host);
     }
-    const mode = selection?.mode || "solid";
-    host.dataset.mode = mode;
-    const custom =
-      mode === "custom"
-        ? appearance.customBackgrounds?.find(
-            (bg) => bg.id === selection.backgroundId,
-          )
-        : mode === "backtyan"
-          ? {
-              url: "/mini-app/assets/background-backtyan.mp4",
-              type: "video",
-              fit: "cover",
-              scale: 100,
-              positionX: 50,
-              positionY: 50,
-              speed: 50,
-              dimming: 65,
-            }
-          : null;
-    syncCustomBackground(host, custom, {
-      paused: matchMedia("(prefers-reduced-motion: reduce)").matches,
+    syncPresetBackground(host, selection, appearance, {
+      hidden: id !== "landing-shared-background" && !settings.perPage,
     });
-    if (!custom) host.style.removeProperty("--custom-dimming");
-    host.style.setProperty(
-      "--background-dimming",
-      String((appearance.backgroundMotion?.[mode]?.dimming ?? 12) / 100),
-    );
-    if (!custom && !host.querySelector(".landing-background__pattern")) {
-      const pattern = document.createElement("div");
-      pattern.className = "landing-background__pattern";
-      host.append(pattern);
-    }
   };
   paint(
     document.body,
