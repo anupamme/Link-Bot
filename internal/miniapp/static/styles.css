@@ -11215,14 +11215,7 @@ body.has-open-modal .admin-save-bar {
 }
 
 /* My Tax: a compact, flat setup screen with an auditable receipt journal. */
-.admin-moynalog { display: grid; gap: 18px; padding: 2px 4px 96px; }
-.admin-moynalog__header { display: flex; align-items: flex-start; justify-content: space-between; gap: 14px; padding: 4px 0 2px; }
-.admin-moynalog__header > div { min-width: 0; }
-.admin-moynalog__header span { color: var(--muted); font-size: 9px; font-weight: 800; letter-spacing: .08em; }
-.admin-moynalog__header h2 { margin: 5px 0 4px; font-size: 20px; line-height: 1.2; }
-.admin-moynalog__header p { max-width: 390px; margin: 0; color: var(--muted); font-size: 10px; line-height: 1.45; }
-.admin-moynalog__status { flex: 0 0 auto; margin-top: 7px; color: var(--muted); font-size: 9px; font-style: normal; font-weight: 800; }
-.admin-moynalog__status.is-active { color: var(--success); }
+.admin-moynalog { display: grid; gap: 18px; padding: 0 4px 96px; }
 .admin-moynalog__metrics { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); overflow: hidden; border-block: 1px solid var(--line); }
 .admin-moynalog__metrics > div { min-width: 0; min-height: 58px; padding: 9px 7px; display: grid; place-content: center; gap: 5px; text-align: center; }
 .admin-moynalog__metrics > div + div { border-inline-start: 1px solid var(--line-soft); }
@@ -11244,19 +11237,18 @@ body.has-open-modal .admin-save-bar {
 .admin-moynalog__item { padding-bottom: 2px; }
 .admin-moynalog__methods { min-width: 0; margin: 0; padding: 13px 0 0; border: 0; border-top: 1px solid var(--line-soft); }
 .admin-moynalog__methods legend { margin-bottom: 9px; color: var(--muted); font-size: 9px; font-weight: 750; }
-.admin-moynalog__methods > div { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); border-block: 1px solid var(--line-soft); }
-.admin-moynalog__methods label { min-width: 0; min-height: 42px; padding: 8px 3px; display: flex; align-items: center; gap: 8px; color: var(--text); font-size: 10px; font-weight: 700; cursor: pointer; }
-.admin-moynalog__methods label:nth-child(even) { padding-left: 10px; border-inline-start: 1px solid var(--line-soft); }
-.admin-moynalog__methods label:nth-child(n + 3) { border-top: 1px solid var(--line-soft); }
+.admin-moynalog__methods > div { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
+.admin-moynalog__methods label { min-width: 0; min-height: 42px; padding: 8px 10px; display: flex; align-items: center; gap: 8px; color: var(--text); font-size: 10px; font-weight: 700; cursor: pointer; }
 .admin-moynalog__methods input { width: 17px; height: 17px; flex: 0 0 auto; accent-color: var(--accent); }
 .admin-moynalog__methods span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.admin-moynalog__actions { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
+.admin-moynalog__actions { display: grid; grid-template-columns: 1fr; gap: 8px; }
 .admin-moynalog__actions button { min-height: 44px; padding: 9px 12px; display: inline-flex; align-items: center; justify-content: center; gap: 7px; border: 1px solid var(--line); border-radius: 7px; color: var(--button-text); background: var(--control-bg); font-size: 10px; font-weight: 800; }
-.admin-moynalog__actions button:first-child { border-color: var(--accent); background: var(--accent); color: var(--accent-contrast); }
 .admin-moynalog__actions svg { width: 16px; height: 16px; }
-.admin-moynalog__notice { margin: 0; padding: 10px 0 0 11px; border-top: 1px solid var(--line-soft); border-left: 2px solid var(--line); color: var(--muted); font-size: 9px; line-height: 1.5; }
-.admin-moynalog__receipt-list { border-top: 1px solid var(--line-soft); }
-.admin-moynalog-receipt { padding: 12px 0; border-bottom: 1px solid var(--line-soft); }
+.admin-moynalog__receipt-list { display: grid; gap: 8px; }
+.admin-moynalog-receipt { padding: 12px; }
+.admin-moynalog :is(.admin-field__control, .admin-moynalog__methods label, .admin-moynalog-receipt, .admin-moynalog__actions button, .admin-moynalog__section-head > button, .admin-moynalog-receipt__state button) {
+  background: var(--surface); color: var(--text); border: 1px solid var(--line); border-radius: 12px;
+}
 .admin-moynalog-receipt__main { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; }
 .admin-moynalog-receipt__main > span { min-width: 0; display: grid; gap: 3px; }
 .admin-moynalog-receipt__main strong { overflow-wrap: anywhere; font-size: 11px; line-height: 1.35; }
@@ -11275,8 +11267,6 @@ body.has-open-modal .admin-save-bar {
 
 @media (max-width: 390px) {
 	.admin-moynalog__credentials { grid-template-columns: 1fr; }
-	.admin-moynalog__header { display: grid; gap: 2px; }
-	.admin-moynalog__status { margin-top: 0; }
 	.admin-moynalog-receipt__state { grid-template-columns: auto minmax(0, 1fr); }
 	.admin-moynalog-receipt__state button { grid-column: 1 / -1; justify-self: start; }
 }
@@ -11810,7 +11800,6 @@ body.is-layout-editing .dashboard-banner { pointer-events: none; }
 }
 
 .admin-integration__save { min-width: 94px; }
-.admin-moynalog__actions [data-action="admin-integration-save"],
 .admin-broadcast__secondary[data-action="admin-broadcast-save-buttons"] { padding-inline: 12px; }
 
 .modal__sheet--layout-style {
@@ -14180,6 +14169,7 @@ body.is-layout-editing .layout-editor-grid { background: none; }
 
 /* Trial, grace access and maintenance fields share the card glass material. */
 :root[data-glass="on"] :is(.admin-trial-editor, .admin-maintenance-editor) .admin-field__control,
+:root[data-glass="on"] .admin-moynalog :is(.admin-field__control, .admin-moynalog__methods label, .admin-moynalog-receipt, .admin-moynalog__actions button, .admin-moynalog__section-head > button, .admin-moynalog-receipt__state button),
 :root[data-glass="on"] #page-admin .admin-event {
   background: var(--glass-background);
   background-image: var(--glass-texture);

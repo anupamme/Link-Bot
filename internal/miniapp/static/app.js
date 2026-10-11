@@ -4366,8 +4366,19 @@ function getBottomNavPages() {
 	return pages.filter((page) => PAGES.includes(page) && (page !== "admin" || isAdminUser()) && pageFeatureEnabled(page));
 }
 
-const ADMIN_SAVE_SECTIONS = new Set(["landing", "cursors", "localization", "maintenance", "features", "subpage", "content", "appearance", "layout", "plans", "trial", "referrals", "grace"]);
+const ADMIN_SAVE_SECTIONS = new Set(["landing", "cursors", "localization", "maintenance", "features", "subpage", "content", "appearance", "layout", "plans", "trial", "referrals", "grace", "moynalog"]);
 let lastBottomDockMode = "navigation";
+
+function adminEditorSaveState() {
+	if (state.currentPage === "admin" && state.adminSection === "moynalog") {
+		return {
+			dirty: Boolean(state.adminIntegrationDrafts.moynalog?.dirty),
+			busy: Boolean(state.adminIntegrationBusy || state.adminMoyNalogBusy),
+			saving: state.adminIntegrationBusy === "moynalog",
+		};
+	}
+	return { dirty: state.adminSettingsDirty, busy: Boolean(state.adminBusy || adminBackgroundBusy), saving: state.adminBusy === "save-settings" };
+}
 
 function getBottomDockMode() {
 	if (state.adminLayoutEditing) return "layout";
@@ -4471,7 +4482,7 @@ function mountCabinetShell(markup) {
 			groups, section: state.adminSection, page: state.currentPage, locale: state.locale,
 			brand: state.data?.brand?.name || "Link-Bot", logo: state.data?.brand?.logoUrl, logout: Boolean(renderBrowserLogoutButton()),
 			save: state.currentPage === "admin" && ADMIN_SAVE_SECTIONS.has(state.adminSection),
-			dirty: state.adminSettingsDirty, busy: Boolean(state.adminBusy || adminBackgroundBusy),
+			dirty: adminEditorSaveState().dirty, busy: adminEditorSaveState().busy,
 			plans: (state.adminSettingsDraft?.plans || state.data?.admin?.settings?.plans || []).map(plan => ({...plan})),
 			users: {...(state.adminUsers || {total: 0}), items: [...(state.adminUsers?.items || [])]}, usersQuery: state.adminUsersQuery,
 			servers: getServerItems().map(server => ({...server})), serverFilter: state.serverFilter,
@@ -5253,9 +5264,8 @@ function renderConsolePage() {
 
 function renderConsoleSaveBar() {
   if (state.currentPage !== "admin" || !ADMIN_SAVE_SECTIONS.has(state.adminSection)) return "";
-  const saving = state.adminBusy === "save-settings";
-  const disabled = Boolean(state.adminBusy || adminBackgroundBusy);
-  return `<div class="rw-savebar" role="region" aria-label="Сохранение настроек"><span role="status">${state.adminSettingsDirty ? localizedText("Есть несохранённые изменения", "Unsaved changes", "تغییرات ذخیره نشده") : localizedText("Все изменения сохранены", "All changes saved", "تغییرات ذخیره شد")}</span><div><button class="rw-refresh" type="button" data-action="admin-cancel-settings" ${disabled || !state.adminSettingsDirty ? "disabled" : ""}>${localizedText("Отменить", "Discard", "لغو")}</button><button class="rw-save" type="button" data-action="admin-save-settings" ${disabled || !state.adminSettingsDirty ? "disabled" : ""}>${icon("check")}${saving ? localizedText("Сохранение…", "Saving…", "ذخیره…") : localizedText("Сохранить изменения", "Save changes", "ذخیره تغییرات")}</button></div></div>`;
+  const { saving, busy: disabled, dirty } = adminEditorSaveState();
+  return `<div class="rw-savebar" role="region" aria-label="Сохранение настроек"><span role="status">${dirty ? localizedText("Есть несохранённые изменения", "Unsaved changes", "تغییرات ذخیره نشده") : localizedText("Все изменения сохранены", "All changes saved", "تغییرات ذخیره شد")}</span><div><button class="rw-refresh" type="button" data-action="admin-cancel-settings" ${disabled || !dirty ? "disabled" : ""}>${localizedText("Отменить", "Discard", "لغو")}</button><button class="rw-save" type="button" data-action="admin-save-settings" ${disabled || !dirty ? "disabled" : ""}>${icon("check")}${saving ? localizedText("Сохранение…", "Saving…", "ذخیره…") : localizedText("Сохранить изменения", "Save changes", "ذخیره تغییرات")}</button></div></div>`;
 }
 
 function renderAdminPage() {
@@ -6850,9 +6860,7 @@ function renderAdminMoyNalogPage() {
 	const attention = receipts.filter((receipt) => ["failed", "uncertain"].includes(receipt.status)).length;
 	const busy = Boolean(state.adminIntegrationBusy === "moynalog" || state.adminMoyNalogBusy);
 	const passwordField = (item.fields || []).find((field) => field.key === "password");
-	const status = item.enabled && item.configured ? "Работает" : item.configured ? "Выключено" : "Не настроено";
 	return `<section class="page admin-page ${pageClass("admin")}" id="page-admin"><div class="admin-moynalog">
-		<header class="admin-section-tools"><i class="admin-moynalog__status ${item.enabled && item.configured ? "is-active" : ""}">${escapeHtml(status)}</i></header>
 		<div class="admin-moynalog__metrics" aria-label="Состояние чеков"><div><strong>${receipts.length}</strong><span>В журнале</span></div><div><strong>${succeeded}</strong><span>Создано</span></div><div class="${attention ? "has-attention" : ""}"><strong>${attention}</strong><span>Требуют внимания</span></div></div>
 		<section class="admin-moynalog__settings" aria-labelledby="moynalog-settings-title">
 			<div class="admin-moynalog__section-head"><div><h3 id="moynalog-settings-title">Автоматические чеки</h3><p>Включите после проверки доступа к кабинету.</p></div><label class="admin-moynalog__switch"><span class="sr-only">Включить автоматические чеки</span><input type="checkbox" data-integration-provider="moynalog" data-integration-enabled ${draft.enabled ? "checked" : ""}></label></div>
@@ -6862,10 +6870,9 @@ function renderAdminMoyNalogPage() {
 			</div>
 			<label class="admin-field admin-moynalog__item"><span>Название услуги в чеке</span><input class="admin-field__control" type="text" maxlength="120" data-integration-provider="moynalog" data-integration-field="itemName" value="${escapeAttribute(draft.fields.itemName || "VPN-подписка")}" placeholder="VPN-подписка"></label>
 			<fieldset class="admin-moynalog__methods"><legend>Создавать чек после оплаты через</legend><div>${MOYNALOG_PAYMENT_METHODS.map(([id, label]) => `<label><input type="checkbox" data-integration-provider="moynalog" data-moynalog-method="${id}" ${methods.has(id) ? "checked" : ""}><span>${escapeHtml(label)}</span></label>`).join("")}</div></fieldset>
-			<div class="admin-moynalog__actions"><button type="button" data-action="admin-integration-save" data-value="moynalog" ${busy ? "disabled" : ""}><span>${state.adminIntegrationBusy ? "Сохраняем" : "Сохранить"}</span></button><button type="button" data-action="admin-moynalog-test" ${busy || !item.configured ? "disabled" : ""}>${icon(state.adminMoyNalogBusy === "test" ? "refresh" : "shield")}<span>${state.adminMoyNalogBusy === "test" ? "Проверяем" : "Проверить вход"}</span></button></div>
-			<p class="admin-moynalog__notice">Пароль хранится в зашифрованном виде. Используется неофициальный API личного кабинета — при изменениях на стороне ФНС интеграция может потребовать обновления.</p>
+			<div class="admin-moynalog__actions"><button type="button" data-action="admin-moynalog-test" ${busy || !item.configured ? "disabled" : ""}>${icon(state.adminMoyNalogBusy === "test" ? "refresh" : "shield")}<span>${state.adminMoyNalogBusy === "test" ? "Проверяем" : "Проверить вход"}</span></button></div>
 		</section>
-		<section class="admin-moynalog__journal" aria-labelledby="moynalog-journal-title"><div class="admin-moynalog__section-head"><div><h3 id="moynalog-journal-title">Последние чеки</h3><p>Повтор разрешён только после подтверждённой ошибки.</p></div><button type="button" data-action="admin-moynalog-refresh" ${busy ? "disabled" : ""} aria-label="Обновить журнал">${icon("refresh")}</button></div>${receipts.length ? `<div class="admin-moynalog__receipt-list">${receipts.map(renderAdminMoyNalogReceipt).join("")}</div>` : `<p class="admin-moynalog__empty">Чеков пока нет.</p>`}</section>
+		<section class="admin-moynalog__journal" aria-labelledby="moynalog-journal-title"><div class="admin-moynalog__section-head"><div><h3 id="moynalog-journal-title">Последние чеки</h3></div><button type="button" data-action="admin-moynalog-refresh" ${busy ? "disabled" : ""} aria-label="Обновить журнал">${icon("refresh")}</button></div>${receipts.length ? `<div class="admin-moynalog__receipt-list">${receipts.map(renderAdminMoyNalogReceipt).join("")}</div>` : `<p class="admin-moynalog__empty">Чеков пока нет.</p>`}</section>
 	</div></section>`;
 }
 
@@ -8531,13 +8538,12 @@ function renderAdminLayoutStyleModal() {
 }
 
 function renderAdminSaveBar(className = "", entering = false) {
-	const saving = state.adminBusy === "save-settings";
-	const busy = Boolean(state.adminBusy || adminBackgroundBusy);
+	const { saving, busy, dirty } = adminEditorSaveState();
 	const status = state.adminBusy === "upload-logo"
 		? localizedText("Загружаем логотип...", "Uploading logo...", "در حال بارگذاری لوگو...")
 		: saving
 		? localizedText("Сохраняем...", "Saving...", "در حال ذخیره...")
-		: state.adminSettingsDirty
+		: dirty
 			? localizedText("Есть несохранённые изменения", "Unsaved changes", "تغییرات ذخیره‌نشده")
 			: localizedText("Изменения сохранены", "Changes saved", "تغییرات ذخیره شد");
 	const moreButton = state.adminLayoutEditing || state.adminPlanEditing
@@ -8546,7 +8552,7 @@ function renderAdminSaveBar(className = "", entering = false) {
 	const cancelAction = state.adminLayoutEditing ? "admin-layout-exit" : state.adminPlanEditing ? "admin-plan-exit" : "admin-cancel-settings";
 	const saveLabel = localizedText("Сохранить изменения", "Save changes", "ذخیره تغییرات");
 	const cancelLabel = localizedText("Отменить изменения и выйти", "Discard changes and exit", "لغو تغییرات و خروج");
-	return `<nav class="bottom-nav bottom-nav--editor ${entering ? "bottom-nav--entering" : ""} admin-save-bar ${className}" aria-label="${escapeAttribute(localizedText("Действия редактора", "Editor actions", "اقدامات ویرایشگر"))}"><span class="sr-only" role="status" aria-live="polite">${escapeHtml(status)}</span><div class="admin-save-bar__actions">${moreButton}<button class="admin-save-bar__save" type="button" data-action="admin-save-settings" ${busy || !state.adminSettingsDirty ? "disabled" : ""} aria-label="${escapeAttribute(saveLabel)}" title="${escapeAttribute(saveLabel)}">${icon("check")}</button><button class="admin-save-bar__close" type="button" data-action="${cancelAction}" ${busy ? "disabled" : ""} aria-label="${escapeAttribute(cancelLabel)}" title="${escapeAttribute(cancelLabel)}">${icon("close")}</button></div></nav>${renderAdminLayoutAddMenu()}`;
+	return `<nav class="bottom-nav bottom-nav--editor ${entering ? "bottom-nav--entering" : ""} admin-save-bar ${className}" aria-label="${escapeAttribute(localizedText("Действия редактора", "Editor actions", "اقدامات ویرایشگر"))}"><span class="sr-only" role="status" aria-live="polite">${escapeHtml(status)}</span><div class="admin-save-bar__actions">${moreButton}<button class="admin-save-bar__save" type="button" data-action="admin-save-settings" ${busy || !dirty ? "disabled" : ""} aria-label="${escapeAttribute(saveLabel)}" title="${escapeAttribute(saveLabel)}">${icon("check")}</button><button class="admin-save-bar__close" type="button" data-action="${cancelAction}" ${busy ? "disabled" : ""} aria-label="${escapeAttribute(cancelLabel)}" title="${escapeAttribute(cancelLabel)}">${icon("close")}</button></div></nav>${renderAdminLayoutAddMenu()}`;
 }
 
 function renderAdminPlanSaveBar(entering = false) {
@@ -11938,8 +11944,9 @@ function bindRootActions() {
 			if (action === "admin-user-block") return await setAdminUserBlocked(target.dataset.blocked === "true");
 			if (action === "admin-layout-exit") return exitAdminLayoutEditor();
 			if (action === "admin-cancel-settings") {
-				if (state.adminBusy) return;
-				syncAdminSettingsDraft(true);
+				if (adminEditorSaveState().busy) return;
+				if (state.adminSection === "moynalog") delete state.adminIntegrationDrafts.moynalog;
+				else syncAdminSettingsDraft(true);
 				return closeAdminSection();
 			}
 			if (action === "admin-layout-more-toggle") {
@@ -12380,6 +12387,7 @@ function bindRootActions() {
 		const integrationProvider = target?.dataset?.integrationProvider;
 		if (integrationProvider && state.adminIntegrationDrafts[integrationProvider]) {
 			const draft = state.adminIntegrationDrafts[integrationProvider];
+			if (integrationProvider === "moynalog") { draft.dirty = true; syncAdminSaveBarDOM(); }
 			if (integrationProvider === "moynalog" && target.dataset.moynalogMethod) {
 				const selected = moyNalogSelectedMethods(draft);
 				if (target.checked) selected.add(target.dataset.moynalogMethod);
@@ -13108,6 +13116,7 @@ function applyAdminAppearancePreset(id) {
 }
 
 async function saveAdminSettings() {
+	if (state.adminSection === "moynalog") return await saveAdminIntegration("moynalog");
 	if (adminBackgroundBusy) return;
 	if (!state.adminSettingsDraft || state.adminBusy) return;
 	for (const [path, raw] of Object.entries(state.adminJSONDrafts)) {
@@ -13276,14 +13285,14 @@ async function uploadAdminFavicon(file) {
 }
 
 function syncAdminSaveBarDOM() {
-	const busy = Boolean(state.adminBusy || adminBackgroundBusy);
+	const { busy, dirty, saving } = adminEditorSaveState();
 	const status = state.adminBusy === "upload-logo"
 		? localizedText("Загружаем логотип...", "Uploading logo...", "در حال بارگذاری لوگو...")
 		: state.adminBusy === "upload-favicon"
 		? localizedText("Загружаем favicon...", "Uploading favicon...", "در حال بارگذاری favicon...")
-		: state.adminBusy === "save-settings"
+		: saving
 		? localizedText("Сохраняем...", "Saving...", "در حال ذخیره...")
-		: state.adminSettingsDirty
+		: dirty
 		? localizedText("Есть несохранённые изменения", "Unsaved changes", "تغییرات ذخیره‌نشده")
 		: localizedText("Все изменения сохранены", "All changes saved", "همه تغییرات ذخیره شد");
 	app.querySelectorAll(".admin-save-bar, .rn-settings-actions").forEach((bar) => {
@@ -13291,7 +13300,7 @@ function syncAdminSaveBarDOM() {
 		const button = bar.querySelector('[data-action="admin-save-settings"]');
 		if (label) label.textContent = status;
 		if (!button) return;
-		button.disabled = busy || !state.adminSettingsDirty;
+		button.disabled = busy || !dirty;
 		bar.querySelector('[data-action="admin-cancel-settings"], [data-action="admin-layout-exit"], [data-action="admin-plan-exit"]')?.toggleAttribute("disabled", busy);
 	});
 }
