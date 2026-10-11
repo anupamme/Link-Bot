@@ -108,12 +108,25 @@ func (h *Handler) handleAdminEmailBroadcastSend(w http.ResponseWriter, r *http.R
 	if !h.requireEmailBroadcastAdmin(w, sess) {
 		return
 	}
+	var req adminBroadcastSendRequest
+	if err := h.decodeJSONRequest(w, r, 2048, &req); err != nil {
+		return
+	}
 	settings, configured := h.emailSMTPSettings()
 	if !configured {
 		h.writeError(w, http.StatusServiceUnavailable, "email_not_configured", "SMTP не настроен")
 		return
 	}
-	recipients, err := h.customerRepository.EmailBroadcastRecipients(r.Context())
+	draft, err := h.customerRepository.EmailBroadcastDraft(r.Context())
+	if err != nil {
+		h.writeError(w, 500, "email_broadcast_failed", "Не удалось загрузить письмо")
+		return
+	}
+	if !req.UpdatedAt.IsZero() && !draft.UpdatedAt.Equal(req.UpdatedAt) {
+		h.writeError(w, http.StatusConflict, "broadcast_draft_changed", "Черновик изменился. Проверьте письмо и аудиторию ещё раз")
+		return
+	}
+	recipients, err := h.broadcastEmailRecipients(r.Context(), draft.Audience)
 	if err != nil {
 		h.writeError(w, http.StatusInternalServerError, "email_broadcast_failed", "Не удалось загрузить адреса")
 		return
@@ -122,7 +135,7 @@ func (h *Handler) handleAdminEmailBroadcastSend(w http.ResponseWriter, r *http.R
 		h.writeError(w, http.StatusBadRequest, "email_broadcast_empty", "Пока нет пользователей с привязанной почтой")
 		return
 	}
-	draft, err := h.customerRepository.BeginEmailBroadcast(r.Context(), len(recipients), sess.User.ID)
+	draft, err = h.customerRepository.BeginEmailBroadcast(r.Context(), len(recipients), sess.User.ID, draft.UpdatedAt)
 	if errors.Is(err, database.ErrEmailBroadcastRunning) {
 		h.writeError(w, http.StatusConflict, "email_broadcast_running", "Сохраните письмо или дождитесь завершения рассылки")
 		return

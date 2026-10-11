@@ -23,7 +23,7 @@ import (
 	planbook "link-bot/internal/plans"
 )
 
-const CurrentVersion = 27
+const CurrentVersion = 28
 
 var (
 	hexColorPattern       = regexp.MustCompile(`^#[0-9a-fA-F]{6}$`)
@@ -241,6 +241,8 @@ type TelegramButtonSettings struct {
 }
 
 type AppearanceSettings struct {
+	Landing           LandingSettings                     `json:"landing"`
+	Cursors           map[string]CursorSettings           `json:"cursors"`
 	CustomBackgrounds []CustomBackgroundSettings          `json:"customBackgrounds"`
 	ActiveBackground  string                              `json:"activeBackground"`
 	BottomNavStyle    string                              `json:"bottomNavStyle"`
@@ -1956,7 +1958,7 @@ func validateAppearance(value *AppearanceSettings, defaults AppearanceSettings, 
 			delete(value.BackgroundMotion, name)
 		}
 	}
-	return nil
+	return validateSurfaces(value)
 }
 
 func validateLayout(value *LayoutSettings, defaults LayoutSettings, migrate bool) error {

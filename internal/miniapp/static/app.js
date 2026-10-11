@@ -16,6 +16,8 @@ import { reviewRewardDraft, reviewRewardsFromDraft, reviewRewardSummary } from "
 import { syncTelegramLayout } from "./telegram-layout.mjs";
 import { renderSMTPSettings } from "./admin-smtp.mjs";
 import { syncCustomBackground, probeBackground, draggedPosition } from "./custom-background.mjs";
+import {applyCustomCursor,cursorValues} from "./custom-cursor.mjs";
+import {ensureSurfaceSettings,renderCursorEditor,renderLandingEditor,renderAudienceEditor} from "./surface-editors.mjs";
 import { renderCustomBackgroundEditor } from "./custom-background-editor.mjs";
 import { reuseAdminUserRows } from "./stable-user-rows.mjs";
 import { renderAISettings } from "./admin-ai.mjs";
@@ -2745,6 +2747,7 @@ const state = {
   adminSubscriptionTargetResult: null,
   adminSubscriptionDestination: "",
   adminBusy: "",
+	adminLandingTab:"colors", adminCursorSurface:"landing", adminAudienceDraft:{}, adminAudienceCount:{}, adminAudienceOptions:null, adminAudienceBusy:false,
 	adminBroadcast: null,
 	adminBroadcastTab: readSetting(STORAGE_KEYS.adminBroadcastTab, "telegram") === "email" ? "email" : "telegram",
 	adminEmailBroadcast: null,
@@ -2884,7 +2887,7 @@ function t() {
 }
 
 function getRuntimeSettings() {
-	if ((state.adminLayoutEditing || state.adminPlanEditing || state.adminSection === "appearance" || state.adminWorkspace && ["plans", "layout"].includes(state.adminSection)) && state.adminSettingsDraft) return state.adminSettingsDraft;
+	if ((state.adminLayoutEditing || state.adminPlanEditing || state.adminSection === "appearance" || state.adminWorkspace && ["plans", "layout", "landing", "cursors"].includes(state.adminSection)) && state.adminSettingsDraft) return state.adminSettingsDraft;
 	return state.data?.runtime || state.publicSettings || state.adminSettingsDraft || null;
 }
 
@@ -4105,6 +4108,7 @@ async function getBrowserAuthHeaders() {
 function requestTimeoutForURL(url) {
   const path = String(url || "");
   if (path.includes("/api/mini-app/admin/background/")) return 120000;
+  if (/\/admin\/broadcast\/(?:audience|send|email\/send)$/.test(path)) return 60000;
   if (path.includes("/api/mini-app/auth/email/start")) return 40000;
   if (path.includes("/api/mini-app/auth/email/link/start") || path.includes("/api/mini-app/admin/broadcast/email/preview")) return 40000;
   if (path.includes("/api/mini-app/bootstrap")) return 30000;
@@ -4363,7 +4367,7 @@ function canAdmin(permission) {
 
 // SMTP remains a separate action permission inside the broadcast section.
 function canAdminSection(section) {
-    return canAdmin(section) || (section === "broadcast" && canAdmin("smtp"));
+    return canAdmin(["landing","cursors"].includes(section)?"appearance":section) || (section === "broadcast" && canAdmin("smtp"));
 }
 
 function getBottomNavPages() {
@@ -4371,7 +4375,7 @@ function getBottomNavPages() {
 	return pages.filter((page) => PAGES.includes(page) && (page !== "admin" || isAdminUser()) && pageFeatureEnabled(page));
 }
 
-const ADMIN_SAVE_SECTIONS = new Set(["localization", "maintenance", "features", "subpage", "content", "appearance", "layout", "plans", "trial", "referrals", "grace"]);
+const ADMIN_SAVE_SECTIONS = new Set(["landing", "cursors", "localization", "maintenance", "features", "subpage", "content", "appearance", "layout", "plans", "trial", "referrals", "grace"]);
 let lastBottomDockMode = "navigation";
 
 function getBottomDockMode() {
@@ -5272,6 +5276,8 @@ function renderAdminPage() {
 	if (state.adminSection === "features") return renderAdminFeaturesPage();
 	if (state.adminSection === "subpage") return renderAdminSubPagePage();
 	if (state.adminSection === "content") return renderAdminContentPage();
+	if (state.adminSection === "landing") return renderAdminEditorPage("Лендинг",renderLandingEditor(state.adminSettingsDraft.appearance,state.adminLandingTab,{escapeHtml,escapeAttribute,renderAdminColorField}));
+ if (state.adminSection === "cursors") {queueMicrotask(syncCursorDemo);return renderAdminEditorPage("Курсоры",renderCursorEditor(state.adminSettingsDraft.appearance,state.adminCursorSurface,{escapeHtml,escapeAttribute}));}
 	if (state.adminSection === "appearance") return renderAdminAppearancePage();
 	if (state.adminSection === "layout") return renderAdminLayoutPage();
 	if (state.adminSection === "plans") return renderAdminPlansPage();
@@ -5310,6 +5316,8 @@ function renderAdminPage() {
 				[localizedText("Редактор контента", "Content", "ویرایشگر محتوا"), "", "content", "adminContent"],
 				["Sub page", "", "subpage", "adminSubscriptions"],
 				[localizedText("Оформление", "Appearance", "ظاهر"), "", "appearance", "adminAppearance"],
+				[localizedText("Лендинг", "Landing", "صفحه اصلی"), "", "landing", "adminAppearance"],
+				[localizedText("Курсоры", "Cursors", "نشانگرها"), "", "cursors", "adminAppearance"],
 				[localizedText("Конструктор UI", "UI builder", "سازنده رابط"), "", "layout", "grid"],
 				[localizedText("Тарифы", "Plans", "تعرفه‌ها"), "", "plans", "cartShopping"],
 			])}
@@ -5346,6 +5354,8 @@ const ADMIN_SEARCH_SECTIONS = [
 	["content", "Редактор контента", "тексты кнопки сообщения"],
 	["subpage", "Sub page", "клиенты подключения"],
 	["appearance", "Оформление", "цвет фон рамки стекло"],
+ ["landing","Лендинг","сайт главная тексты кнопки фоны цвета"],
+ ["cursors","Курсоры","указатель лапка курсор загрузка"],
 	["layout", "Конструктор UI", "расположение элементов"],
 	["plans", "Тарифы", "цена устройства трафик пакеты"],
 	["users", "Пользователи", "баланс подписки блокировка"],
@@ -6922,6 +6932,7 @@ function renderAdminBroadcastPage() {
 		<section class="page admin-page ${pageClass("admin")}" id="page-admin">
 			<div class="admin-broadcast">
 				${renderAdminBroadcastTabs()}
+ ${renderCurrentAudience("telegram",running)}
 				<header class="admin-section-tools">
 					<span class="admin-broadcast__status admin-broadcast__status--${escapeAttribute(draft.status || "idle")}">${escapeHtml(broadcastStatusLabel(draft.status, english))}</span>
 				</header>
@@ -6983,7 +6994,7 @@ function renderAdminEmailBroadcastPage() {
   const total = Math.max(0, Number(draft.recipientCount || 0));
   const processed = Number(draft.sentCount || 0) + Number(draft.failedCount || 0);
   const progress = total ? Math.min(100, Math.round(processed / total * 100)) : 0;
-  const message = `<div class="admin-mail__form">
+  const message = `${renderCurrentAudience("email",running)}<div class="admin-mail__form">
       <label class="admin-email-broadcast__field"><span>${english ? "Subject" : "Тема"}</span><input data-admin-email-subject maxlength="160" placeholder="${english ? "Email subject" : "Тема письма"}" value="${escapeAttribute(state.adminEmailDraftSubject)}" ${running ? "disabled" : ""}></label>
       <label class="admin-email-broadcast__field"><span>${english ? "Message" : "Текст письма"}</span><textarea data-admin-email-body maxlength="20000" rows="4" placeholder="${english ? "Write the message" : "Напишите текст письма"}" ${running ? "disabled" : ""}>${escapeHtml(state.adminEmailDraftBody)}</textarea></label>
       <button class="admin-mail__button" type="button" data-action="admin-email-save" ${running || busy ? "disabled" : ""}>${icon("check")}<span>${english ? "Save email" : "Сохранить письмо"}</span></button>
@@ -7000,14 +7011,14 @@ function renderAdminEmailBroadcastPage() {
     <div class="admin-mail__tabs" role="tablist" aria-label="${english ? "Email editor" : "Редактор письма"}">${tabs.map(([id,label]) => `<button type="button" role="tab" aria-selected="${id === selected}" class="${id === selected ? "is-active" : ""}" data-action="admin-email-editor-tab" data-value="${id}">${label}</button>`).join("")}</div>
     <div class="admin-mail__panel" role="tabpanel">${selected === "connection" ? renderAdminMailSettings() : selected === "test" ? test : message}</div>
     ${canBroadcast ? `<div class="admin-mail__delivery">
-      <div class="admin-mail__summary"><small>${english ? "Recipients" : "Получателей"}: ${Number(state.adminEmailBroadcast?.availableRecipients || 0)}</small><span class="admin-broadcast__status admin-broadcast__status--${escapeAttribute(draft.status)}">${escapeHtml(broadcastStatusLabel(draft.status, english))}</span></div>
+      <div class="admin-mail__summary"><small>${english ? "Recipients" : "Получателей"}: ${(state.adminAudienceCount.email ?? (english ? "Not counted" : "Не подсчитано"))}</small><span class="admin-broadcast__status admin-broadcast__status--${escapeAttribute(draft.status)}">${escapeHtml(broadcastStatusLabel(draft.status, english))}</span></div>
       ${!configured ? `<p class="admin-mail__hint">${english ? "Configure SMTP in Connection before sending." : "Для отправки настройте SMTP в «Подключении»."}</p>` : ""}
       ${running || total > 0 ? `<div class="admin-broadcast__progress"><div><span>${english ? "Progress" : "Прогресс"}</span><strong>${progress}%</strong></div><i><b style="width:${progress}%"></b></i><p>${english ? "Sent" : "Отправлено"}: ${Number(draft.sentCount || 0)} · ${english ? "Errors" : "Ошибок"}: ${Number(draft.failedCount || 0)} · ${english ? "Total" : "Всего"}: ${total}</p></div>` : ""}
       ${draft.lastError ? `<p class="admin-broadcast__error">${escapeHtml(draft.lastError)}</p>` : ""}
 
-      <button class="admin-mail__button admin-mail__button--primary" type="button" data-action="admin-email-open-confirm" ${running || busy || !configured || !state.adminEmailBroadcast?.availableRecipients ? "disabled" : ""}>${icon("send")}<span>${english ? "Send to all" : "Отправить всем"}</span></button>
+      <button class="admin-mail__button admin-mail__button--primary" type="button" data-action="admin-email-open-confirm" ${running || busy || !configured || state.adminAudienceCount.email === 0 ? "disabled" : ""}>${icon("send")}<span>${english ? "Send to audience" : "Отправить аудитории"}</span></button>
     </div>` : ""}
-  </div>${state.adminEmailConfirmOpen ? `<div class="modal open"><button class="modal__backdrop" type="button" data-action="admin-email-close-confirm"></button><div class="modal__sheet admin-broadcast-confirm" role="dialog" aria-modal="true"><div class="modal__header"><div class="modal__title">${english ? "Send email to all users?" : "Отправить письмо всем пользователям?"}</div></div><p>${english ? `Recipients with verified email: ${Number(state.adminEmailBroadcast?.availableRecipients || 0)}. Check the preview first.` : `Получателей с подтверждённой почтой: ${Number(state.adminEmailBroadcast?.availableRecipients || 0)}. Проверьте тестовое письмо перед запуском.`}</p><div class="admin-broadcast-confirm__actions"><button type="button" data-action="admin-email-close-confirm">${english ? "Cancel" : "Отмена"}</button><button class="admin-broadcast-confirm__send" type="button" data-action="admin-email-send">${icon("send")}<span>${english ? "Start" : "Запустить"}</span></button></div></div></div>` : ""}</section>`;
+  </div>${state.adminEmailConfirmOpen ? `<div class="modal open"><button class="modal__backdrop" type="button" data-action="admin-email-close-confirm"></button><div class="modal__sheet admin-broadcast-confirm" role="dialog" aria-modal="true"><div class="modal__header"><div class="modal__title">${english ? "Send to selected recipients?" : "Отправить письмо выбранной аудитории?"}</div></div><p>${english ? `Recipients with verified email: ${(state.adminAudienceCount.email ?? (english ? "Not counted" : "Не подсчитано"))}. Check the preview first.` : `Получателей с подтверждённой почтой: ${(state.adminAudienceCount.email ?? (english ? "Not counted" : "Не подсчитано"))}. Проверьте тестовое письмо перед запуском.`}</p><div class="admin-broadcast-confirm__actions"><button type="button" data-action="admin-email-close-confirm">${english ? "Cancel" : "Отмена"}</button><button class="admin-broadcast-confirm__send" type="button" data-action="admin-email-send">${icon("send")}<span>${english ? "Start" : "Запустить"}</span></button></div></div></div>` : ""}</section>`;
 }
 
 function renderAdminBroadcastButton(button, index, disabled, english) {
@@ -7043,7 +7054,7 @@ function renderAdminBroadcastButton(button, index, disabled, english) {
 }
 
 function renderAdminBroadcastConfirm(english) {
-	return `<div class="modal open"><button class="modal__backdrop" type="button" data-action="admin-broadcast-close-confirm" aria-label="${english ? "Cancel" : "Отмена"}"></button><div class="modal__sheet admin-broadcast-confirm" role="dialog" aria-modal="true" aria-labelledby="broadcast-confirm-title"><div class="modal__header"><div><div class="section-label">${english ? "Broadcast" : "Рассылка"}</div><div class="modal__title" id="broadcast-confirm-title">${english ? "Send to all users?" : "Отправить всем пользователям?"}</div></div><button class="header__btn" type="button" data-action="admin-broadcast-close-confirm" aria-label="${english ? "Close" : "Закрыть"}">${icon("close")}</button></div><p>${english ? "The broadcast starts immediately. Check the preview before sending." : "Рассылка начнётся сразу. Перед отправкой проверьте предпросмотр."}</p><div class="admin-broadcast-confirm__actions"><button type="button" data-action="admin-broadcast-close-confirm">${english ? "Cancel" : "Отмена"}</button><button class="admin-broadcast-confirm__send" type="button" data-action="admin-broadcast-send">${icon("send")}<span>${english ? "Start" : "Запустить"}</span></button></div></div></div>`;
+	return `<div class="modal open"><button class="modal__backdrop" type="button" data-action="admin-broadcast-close-confirm" aria-label="${english ? "Cancel" : "Отмена"}"></button><div class="modal__sheet admin-broadcast-confirm" role="dialog" aria-modal="true" aria-labelledby="broadcast-confirm-title"><div class="modal__header"><div><div class="section-label">${english ? "Broadcast" : "Рассылка"}</div><div class="modal__title" id="broadcast-confirm-title">${english ? "Send to selected recipients?" : "Отправить выбранной аудитории?"}</div></div><button class="header__btn" type="button" data-action="admin-broadcast-close-confirm" aria-label="${english ? "Close" : "Закрыть"}">${icon("close")}</button></div><p>${english ? "The broadcast starts immediately. Check the preview before sending." : `Получателей: ${Number(state.adminAudienceCount.telegram||0)}. Рассылка начнётся сразу. Перед отправкой проверьте предпросмотр.`}</p><div class="admin-broadcast-confirm__actions"><button type="button" data-action="admin-broadcast-close-confirm">${english ? "Cancel" : "Отмена"}</button><button class="admin-broadcast-confirm__send" type="button" data-action="admin-broadcast-send">${icon("send")}<span>${english ? "Start" : "Запустить"}</span></button></div></div></div>`;
 }
 
 function broadcastStatusLabel(status, english) {
@@ -7733,6 +7744,8 @@ async function handleCustomBackgroundAction(action, value) {
 		appearance.backgroundMode = "custom";
 	} else if (action === "admin-background-remove") {
 		appearance.customBackgrounds = (appearance.customBackgrounds || []).filter(item => item.id !== value);
+		if(appearance.landing?.background?.backgroundId===value)appearance.landing.background={mode:"solid",backgroundId:""};
+		for(const bg of Object.values(appearance.landing?.pages||{}))if(bg.backgroundId===value){bg.mode="inherit";bg.backgroundId="";}
 		appearance.activeBackground = appearance.customBackgrounds[0]?.id || "";
 		// Keep the empty editor visible; use the base colour until a new file is added.
 	} else if (action === "admin-background-reset" && item) {
@@ -7826,6 +7839,228 @@ function renderAdminAppearancePage() {
 		${renderAdminAppearancePresets()}
 		<div class="admin-appearance-groups">${groups.map(([title, colors]) => `<section class="admin-editor__section admin-appearance-group"><h3>${escapeHtml(title)}</h3><div class="admin-color-grid">${colors.map(([key, label]) => renderAdminColorField(label, `appearance.colors.${key}`)).join("")}</div></section>`).join("")}</div>
 	`);
+}
+
+let landingBackgroundURL = "";
+const surfaceHelpers = { escapeHtml, escapeAttribute };
+function syncLandingPalettePreview() {
+  const l = state.adminSettingsDraft?.appearance?.landing,
+    preview = app.querySelector("[data-landing-preview]");
+  if (!l || !preview) return;
+  for (const [key, name] of [
+    ["background", "bg"],
+    ["surface", "surface"],
+    ["text", "text"],
+    ["muted", "muted"],
+    ["accent", "accent"],
+  ])
+    preview.style.setProperty(`--preview-${name}`, l.colors[key]);
+  preview.style.setProperty("--preview-radius", `${l.buttonRadius}px`);
+}
+async function syncCursorDemo() {
+  const a = state.adminSettingsDraft?.appearance;
+  if (!a) return;
+  const c = a.cursors?.[state.adminCursorSurface];
+  const host = app.querySelector("[data-cursor-demo]");
+  if (!c || !host) return;
+  const key = JSON.stringify(c);
+  const values = await cursorValues(c);
+  if (!host.isConnected || key !== JSON.stringify(c)) return;
+  host.style.setProperty("cursor", values.normal, "important");
+  for (const item of host.querySelectorAll("span"))
+    item.style.setProperty("cursor", values.normal, "important");
+  for (const item of host.querySelectorAll("button,button *"))
+    item.style.setProperty("cursor", values.pointer, "important");
+  host.querySelector("input")?.style.setProperty("cursor", "text", "important");
+}
+async function cursorFile(file) {
+  if (/\.cur$/i.test(file.name)) return file;
+  const url = URL.createObjectURL(file);
+  try {
+    const image = new Image();
+    image.src = url;
+    await image.decode();
+    const canvas = document.createElement("canvas");
+    canvas.width = canvas.height = 64;
+    canvas.getContext("2d").drawImage(image, 0, 0, 64, 64);
+    return await new Promise((resolve, reject) =>
+      canvas.toBlob(
+        (blob) =>
+          blob
+            ? resolve(new File([blob], "cursor.png", { type: "image/png" }))
+            : reject(new Error("Не удалось прочитать изображение")),
+        "image/png",
+      ),
+    );
+  } finally {
+    URL.revokeObjectURL(url);
+  }
+}
+async function uploadSurfaceAsset(file, kind, surface, field) {
+  if (file && file.size > (kind === "background" ? 50 : 2) * 1024 * 1024)
+    return showToast(
+      kind === "background"
+        ? "Фон должен быть до 50 МБ"
+        : "Изображение должно быть до 2 МБ",
+      "danger",
+    );
+  const original = state.adminSettingsDraft;
+  if (!original?.appearance) return;
+  showToast("Загружаем файл…");
+  try {
+    let response;
+    if (file) {
+      const form = new FormData();
+      form.append(
+        kind === "cursor" ? "cursor" : "background",
+        kind === "cursor" ? await cursorFile(file) : file,
+      );
+      response = await postForm(
+        kind === "cursor"
+          ? "/api/mini-app/admin/cursor/upload"
+          : "/api/mini-app/admin/background/upload",
+        form,
+      );
+    } else {
+      if (!landingBackgroundURL.trim())
+        throw new Error("Укажите прямую ссылку на фон");
+      response = await post("/api/mini-app/admin/background/import", {
+        url: landingBackgroundURL.trim(),
+      });
+    }
+    if (state.adminSettingsDraft !== original) return;
+    const a = original.appearance;
+    const l = ensureSurfaceSettings(a),
+      uploaded = response.data;
+    if (kind === "cursor") {
+      a.cursors[surface][field] = uploaded.url;
+      a.cursors[surface].mode = "custom";
+    } else if (kind === "icon") {
+      if (uploaded.type !== "image")
+        throw new Error("Для иконки выберите обычное изображение");
+      l.icons[surface] = uploaded.url;
+    } else {
+      a.customBackgrounds ||= [];
+      let bg = a.customBackgrounds.find((item) => item.url === uploaded.url);
+      if (!bg) {
+        if (a.customBackgrounds.length >= 20)
+          throw new Error("Можно сохранить до 20 фонов");
+        bg = {
+          id: `bg-${Date.now().toString(36)}`,
+          name: file?.name || "Фон лендинга",
+          ...uploaded,
+          fit: "cover",
+          scale: 100,
+          positionX: 50,
+          positionY: 50,
+          speed: 100,
+          dimming: 35,
+        };
+        a.customBackgrounds.push(bg);
+      }
+      l.background = { mode: "custom", backgroundId: bg.id };
+      landingBackgroundURL = "";
+    }
+    state.adminSettingsDirty = true;
+    applyAppearance();
+    render({ preserveScroll: true });
+    showToast("Файл добавлен. Сохраните настройки", "success");
+  } catch (error) {
+    showToast(error.message || "Не удалось загрузить файл", "danger");
+  }
+}
+function currentBroadcastAudience(channel) {
+  const saved =
+    channel === "email"
+      ? state.adminEmailBroadcast?.draft?.audience
+      : state.adminBroadcast?.audience;
+  return (state.adminAudienceDraft[channel] ||= deepClone(
+    saved || {
+      category: "all",
+      internalSquads: [],
+      externalSquads: [],
+      tag: "",
+      language: "",
+    },
+  ));
+}
+function renderCurrentAudience(channel, running) {
+  return renderAudienceEditor(
+    currentBroadcastAudience(channel),
+    state.adminAudienceOptions || state.data?.admin?.squads,
+    state.adminAudienceCount[channel],
+    running || state.adminAudienceBusy,
+    channel,
+    surfaceHelpers,
+  );
+}
+function updateBroadcastAudience(input) {
+  const channel = input.dataset.channel,
+    key = input.dataset.audienceField;
+  if (!["telegram", "email"].includes(channel) || state.adminAudienceBusy)
+    return;
+  const a = currentBroadcastAudience(channel);
+  if (input.type === "checkbox") {
+    const list = new Set(a[key] || []);
+    if (input.checked) list.add(input.value);
+    else list.delete(input.value);
+    a[key] = [...list];
+  } else a[key] = input.value;
+  state.adminAudienceCount[channel] = null;
+  if (state.adminWorkspace) {
+    render({ preserveScroll: true, preserveInteraction: true });
+    return;
+  }
+  const status = input
+    .closest(".audience-editor")
+    ?.querySelector(".audience-count");
+  if (status) status.textContent = "Не подсчитано";
+}
+async function loadAudienceOptions() {
+  if (state.adminAudienceBusy) return;
+  state.adminAudienceBusy = true;
+  try {
+    const response = await post(
+      "/api/mini-app/admin/broadcast/audience/options",
+      {},
+    );
+    state.adminAudienceOptions = response.data;
+  } catch (error) {
+    showToast(error.message || "Не удалось загрузить сквады", "danger");
+  } finally {
+    state.adminAudienceBusy = false;
+    render({ preserveScroll: true });
+  }
+}
+async function checkBroadcastAudience(channel) {
+  if (state.adminAudienceBusy) return false;
+  state.adminAudienceBusy = true;
+  render({ preserveScroll: true });
+  try {
+    const response = await post("/api/mini-app/admin/broadcast/audience", {
+      channel,
+      audience: currentBroadcastAudience(channel),
+    });
+    state.adminAudienceCount[channel] = response.data.count;
+    if (channel === "email")
+      state.adminEmailBroadcast = {
+        ...(state.adminEmailBroadcast || {}),
+        draft: response.data.draft,
+      };
+    else setAdminBroadcastDraft(response.data.draft);
+    if (response.data.count === 0) {
+      showToast("По выбранным условиям нет получателей", "danger");
+      return false;
+    }
+    return true;
+  } catch (error) {
+    state.adminAudienceCount[channel] = null;
+    showToast(error.message || "Не удалось проверить аудиторию", "danger");
+    return false;
+  } finally {
+    state.adminAudienceBusy = false;
+    render({ preserveScroll: true });
+  }
 }
 
 function renderAdminLayoutPage() {
@@ -11599,6 +11834,13 @@ function bindRootActions() {
 				}
 				return analytics ? await refreshAdminAnalytics() : await refreshAdminFinance();
 			}
+			if (action === "admin-landing-tab") { state.adminLandingTab=value; render({preserveScroll:true});return; }
+ if (action === "admin-cursor-surface") {state.adminCursorSurface=value;render({preserveScroll:true});return;}
+ if (action === "admin-cursor-preset") {ensureSurfaceSettings(state.adminSettingsDraft.appearance); const c=state.adminSettingsDraft.appearance.cursors[state.adminCursorSurface];c.mode=value;state.adminSettingsDirty=true;applyAppearance();render({preserveScroll:true});return;}
+ if (action === "admin-cursor-test") {showToast("Проверка кнопки", "success");return;}
+ if (action === "admin-landing-background-import") return await uploadSurfaceAsset(null,"background");
+ if (action === "admin-audience-options") return await loadAudienceOptions();
+ if (action === "admin-audience-check") return await checkBroadcastAudience(value);
 			if (action === "admin-finance-more") return await refreshAdminFinance({ append: true });
 			if (action === "admin-finance-apply") {
 				if (!state.adminFinanceFrom || !state.adminFinanceTo) return showToast("Выберите обе даты", "danger");
@@ -11872,7 +12114,7 @@ function bindRootActions() {
 			if (action === "admin-broadcast-capture") return await startAdminBroadcastCapture();
 			if (action === "admin-broadcast-tab" && ["telegram", "email"].includes(value)) { state.adminBroadcastTab = value; state.adminEmailConfirmOpen = false; render({ preserveScroll: true }); return await refreshAdminBroadcast({ forceButtons: true }); }
 			if (action === "admin-email-save") return await saveAdminEmailBroadcast();
-			if (action === "admin-email-open-confirm") { state.adminEmailConfirmOpen = true; render({ preserveScroll: true }); return; }
+			if (action === "admin-email-open-confirm") { if(state.adminEmailDraftDirty && !await saveAdminEmailBroadcast({quiet:true}))return; if(!await checkBroadcastAudience("email"))return; state.adminEmailConfirmedAt=state.adminEmailBroadcast?.draft?.updatedAt; state.adminEmailConfirmOpen = true; render({ preserveScroll: true }); return; }
 			if (action === "admin-email-close-confirm") { state.adminEmailConfirmOpen = false; render({ preserveScroll: true }); return; }
 			if (action === "admin-email-send") return await sendAdminEmailBroadcast();
 			if (action === "admin-broadcast-add-button") return addAdminBroadcastButton();
@@ -11880,7 +12122,7 @@ function bindRootActions() {
 			if (action === "admin-broadcast-set-style") return setAdminBroadcastButtonStyle(Number(target.dataset.broadcastIndex), value);
 			if (action === "admin-broadcast-save-buttons") return await saveAdminBroadcastButtons();
 			if (action === "admin-broadcast-preview") return await previewAdminBroadcast();
-			if (action === "admin-broadcast-open-confirm") { state.adminBroadcastConfirmOpen = true; render({ preserveScroll: true }); return; }
+			if (action === "admin-broadcast-open-confirm") { await ensureAdminBroadcastButtonsSaved(); if(!await checkBroadcastAudience("telegram"))return; state.adminBroadcastConfirmedAt=state.adminBroadcast?.updatedAt; state.adminBroadcastConfirmOpen = true; render({ preserveScroll: true }); return; }
 			if (action === "admin-broadcast-close-confirm") { state.adminBroadcastConfirmOpen = false; render({ preserveScroll: true }); return; }
 			if (action === "admin-broadcast-send") return await sendAdminBroadcast();
 			if (action === "admin-broadcast-reset") return await resetAdminBroadcast();
@@ -11962,6 +12204,10 @@ function bindRootActions() {
 
 	app.addEventListener("change", (event) => {
 		const input = event.target;
+ if(input.dataset?.audienceField){ updateBroadcastAudience(input);return; }
+ if(input.dataset?.input==="admin-cursor-file"&&input.files?.[0]){void uploadSurfaceAsset(input.files[0],"cursor",input.dataset.surface,input.dataset.cursorKind);return;}
+ if(input.dataset?.input==="admin-landing-background-file"&&input.files?.[0]){void uploadSurfaceAsset(input.files[0],"background");return;}
+ if(input.dataset?.input==="admin-landing-icon-file"&&input.files?.[0]){void uploadSurfaceAsset(input.files[0],"icon",input.dataset.iconKey);return;}
         if (input.dataset.input === "administrators-color") { render({ preserveScroll: true }); return; }
 		if (!(input instanceof HTMLInputElement)) return;
 		if (input.dataset.input === "admin-push-toggle") {
@@ -11993,6 +12239,8 @@ function bindRootActions() {
 
 	app.addEventListener("input", (event) => {
       const target = event.target;
+ if(target.dataset?.audienceField){updateBroadcastAudience(target);return;}
+ if(target.dataset?.input==="admin-landing-background-url"){landingBackgroundURL=target.value;return;}
 		if (target.dataset.input === "admin-background-url") { adminBackgroundURL = target.value; return; }
         if (target.dataset.input?.startsWith("administrators-")) { handleAdministratorsInput(target); return; }
 		if (target.matches?.("[data-admin-email-subject]")) { state.adminEmailDraftSubject = target.value; state.adminEmailDraftDirty = true; return; }
@@ -12196,6 +12444,8 @@ function bindRootActions() {
 			if (settingPath === "content.logoUrl") scheduleAdminLogoPreview(target.value);
 			if (settingPath === "content.webPage.faviconUrl") scheduleAdminFaviconPreview(target.value);
 			state.adminSettingsDirty = true;
+ if(settingPath.startsWith("appearance.landing.")){syncLandingPalettePreview();if(type==="boolean"||target.tagName==="SELECT")render({preserveScroll:true});}
+ if(settingPath.startsWith("appearance.cursors.")&&type==="number")syncCursorDemo();
 			if (settingPath === "appearance.showFrames" || settingPath === "appearance.glow" || settingPath === "appearance.glass" || settingPath === "subPage.includeBuiltIns" || enabledClient) {
                 render({ preserveScroll: true });
                 return;
@@ -12804,7 +13054,7 @@ async function saveAdminSettings() {
 	state.adminBusy = "save-settings";
 	syncAdminSaveBarDOM();
 	try {
-		const response = await post("/api/mini-app/admin/settings/update", { settings: state.adminSettingsDraft, section: state.data?.admin?.access?.isOwner ? "" : state.adminLayoutEditing ? "layout" : state.adminPlanEditing ? "plans" : state.adminSection });
+		const response = await post("/api/mini-app/admin/settings/update", { settings: state.adminSettingsDraft, section: state.data?.admin?.access?.isOwner ? "" : ["landing","cursors"].includes(state.adminSection) ? "appearance" : state.adminLayoutEditing ? "layout" : state.adminPlanEditing ? "plans" : state.adminSection });
 		state.publicSettings = response.data;
 		if (state.data) {
 			state.data.runtime = response.data;
@@ -12980,6 +13230,7 @@ function syncAdminSaveBarDOM() {
 }
 
 function setAdminBroadcastDraft(draft, { forceButtons = false } = {}) {
+	if(!state.adminAudienceDraft.telegram)state.adminAudienceDraft.telegram=deepClone(draft?.audience||{category:"all",internalSquads:[],externalSquads:[],tag:"",language:""});
 	state.adminBroadcast = draft || { status: "idle", buttons: [], recipientCount: 0, sentCount: 0, failedCount: 0 };
 	if (forceButtons || !state.adminBroadcastButtonsDirty) {
 		state.adminBroadcastButtonsDraft = deepClone(Array.isArray(state.adminBroadcast.buttons) ? state.adminBroadcast.buttons : []);
@@ -13017,6 +13268,7 @@ async function refreshAdminEmailBroadcast({ silent = false } = {}) {
   try {
     const response = await post("/api/mini-app/admin/broadcast/email/state", {});
     state.adminEmailBroadcast = response.data;
+ if(!state.adminAudienceDraft.email)state.adminAudienceDraft.email=deepClone(response.data?.draft?.audience||{category:"all",internalSquads:[],externalSquads:[],tag:"",language:""});
     if (!state.adminEmailDraftDirty) {
       state.adminEmailDraftSubject = String(response.data?.draft?.subject || "");
       state.adminEmailDraftBody = String(response.data?.draft?.body || "");
@@ -13064,13 +13316,14 @@ async function previewAdminEmailBroadcast() {
 }
 
 async function sendAdminEmailBroadcast() {
+ if(!state.adminEmailConfirmOpen || !(state.adminAudienceCount.email>0))return;
   state.adminEmailConfirmOpen = false;
   if (state.adminEmailDraftDirty && !await saveAdminEmailBroadcast({ quiet: true })) return;
   if (state.adminEmailBusy) return;
   state.adminEmailBusy = "send";
   render({ preserveScroll: true });
   try {
-    const response = await post("/api/mini-app/admin/broadcast/email/send", {});
+    const response = await post("/api/mini-app/admin/broadcast/email/send", {updatedAt:state.adminEmailConfirmedAt});
     state.adminEmailBroadcast = { ...(state.adminEmailBroadcast || {}), draft: response.data };
     showToast(emailAuthText("Рассылка запущена", "Email broadcast started"), "success");
   } catch (error) { showToast(error?.message || emailAuthText("Не удалось запустить рассылку", "Could not start broadcast"), "danger"); }
@@ -13161,13 +13414,14 @@ async function previewAdminBroadcast() {
 }
 
 async function sendAdminBroadcast() {
+ if(!state.adminBroadcastConfirmOpen || !(state.adminAudienceCount.telegram>0))return;
 	if (state.adminBroadcastBusy) return;
 	state.adminBroadcastConfirmOpen = false;
 	await ensureAdminBroadcastButtonsSaved();
 	state.adminBroadcastBusy = "send";
 	render({ preserveScroll: true });
 	try {
-		const response = await post("/api/mini-app/admin/broadcast/send", {});
+		const response = await post("/api/mini-app/admin/broadcast/send", {updatedAt:state.adminBroadcastConfirmedAt});
 		setAdminBroadcastDraft(response.data);
 		state.adminBroadcastBusy = "";
 		render({ preserveScroll: true });
@@ -17475,6 +17729,7 @@ function applyAppearance() {
 	syncLocalizationFromSettings();
 	applyWebPageMetadata();
 	const appearance = getRuntimeSettings()?.appearance || {};
+ void applyCustomCursor(appearance.cursors?.[state.adminWorkspace||state.currentPage==="admin"?"admin":"cabinet"]);
 	const colors = appearance.colors || {};
 	const accentColor = colors.accent || PALETTE.accent.accent;
 	const unlimitedBadgeColor = colors.unlimitedBadge || "#949494";

@@ -11,7 +11,9 @@
     text: "--text", muted: "--muted", border: "--border", accent: "--accent",
     success: "--success", danger: "--danger",
   };
-  let loading = false;
+  const visualModule=import("./landing-appearance.mjs");
+ let landingText={};
+ let loading = false;
   let previousNodes = "";
   let previousNodeStructure = "";
   let previousPlans = "";
@@ -72,7 +74,7 @@
     const name = String(brand?.name || "").trim() || "Link-Bot";
     $("brand-name").textContent = name;
     $("cabinet-transition-brand").textContent = name;
-    document.title = `${name} — интернет без ограничений`;
+    document.title = `${name} — ${landingText.title||"интернет без ограничений"}`;
     const logo = $("brand-logo");
     const url = safeURL(brand?.logoUrl, true);
     if (url && logo.src !== url) logo.src = url;
@@ -150,7 +152,7 @@
   }
 
   function renderPlans(plans) {
-    const fingerprint = JSON.stringify(plans);
+    const fingerprint = JSON.stringify([plans,landingText.buyButton]);
     if (fingerprint === previousPlans) return;
     previousPlans = fingerprint;
     const list = $("plans-list");
@@ -175,19 +177,19 @@
         <div class="plan-card__top"><div><div class="plan-card__title">${title}</div>${durationNote}</div>${badge ? `<span class="plan-card__badge">${escapeHTML(badge)}</span>` : ""}</div>
         <div class="plan-card__price">${escapeHTML(price)}${priceRub > 0 ? `<small>за ${escapeHTML(planDuration)}</small>` : ""}</div>
         <ul class="plan-card__features"><li>${escapeHTML(formatTraffic(plan.trafficLimitBytes))}</li><li>${deviceLimit > 0 ? `До ${deviceLimit} ${plural(deviceLimit, "устройства", "устройств", "устройств")}` : "Устройства по условиям тарифа"}</li><li>Подключение после оформления</li></ul>
-        <a class="button ${plan.recommended ? "button--primary" : "button--ghost"} plan-card__action" href="${buyURL}">Выбрать тариф</a>
+        <a class="button ${plan.recommended ? "button--primary" : "button--ghost"} plan-card__action" href="${buyURL}">${escapeHTML(landingText.buyButton||"Выбрать тариф")}</a>
       </article>`;
     }).join("");
   }
 
   function renderContacts(contacts) {
-    const fingerprint = JSON.stringify(contacts);
+    const fingerprint = JSON.stringify([contacts,landingText.contactButton]);
     if (fingerprint === previousContacts) return;
     previousContacts = fingerprint;
     const safeContacts = Array.isArray(contacts) ? contacts : [];
     const cards = [`<article class="contact-card">
       <h3>Написать обращение</h3><p>Создайте обращение в кабинете и следите за ответом в переписке.</p>
-      <a class="button button--ghost contact-card__action" href="${supportURL}">Написать обращение в кабинете</a>
+      <a class="button button--ghost contact-card__action" href="${supportURL}">${escapeHTML(landingText.contactButton||"Написать обращение в кабинете")}</a>
     </article>`];
     safeContacts.forEach((contact) => {
       const href = safeURL(contact.url);
@@ -196,7 +198,7 @@
       const label = String(contact.label || "Связаться с нами");
       cards.push(`<article class="contact-card">
         <h3>${escapeHTML(label)}</h3><p>${telegram ? "Напишите нам напрямую в Telegram." : "Свяжитесь с нами удобным способом."}</p>
-        <a class="button button--ghost contact-card__action" href="${escapeHTML(href)}" target="_blank" rel="noopener noreferrer">${telegram ? "Перейти в Telegram" : "Открыть контакт"}</a>
+        <a class="button button--ghost contact-card__action" href="${escapeHTML(href)}" target="_blank" rel="noopener noreferrer">${escapeHTML(landingText.contactButton || (telegram ? "Перейти в Telegram" : "Открыть контакт"))}</a>
       </article>`);
     });
     $("contacts-list").innerHTML = cards.join("");
@@ -211,12 +213,14 @@
       const payload = await response.json();
       if (!payload?.ok || !payload.data) throw new Error("Invalid site data");
       const data = payload.data;
+ landingText=data.landing?.text||{};
       setColors(data.colors);
       document.documentElement.dataset.glass = data.glass === true ? "on" : "off";
       setBrand(data.brand);
       renderNodes(data.nodes, Boolean(data.nodesAvailable));
       renderPlans(data.plans);
       renderContacts(data.contacts);
+ (await visualModule).applyLandingAppearance(data);
     } catch {
       if (!previousNodes) $("servers-list").innerHTML = '<div class="empty-state">Не удалось загрузить серверы. Попробуйте обновить страницу.</div>';
       if (!previousPlans) $("plans-list").innerHTML = '<div class="empty-state">Не удалось загрузить тарифы. Попробуйте обновить страницу.</div>';

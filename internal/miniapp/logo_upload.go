@@ -35,7 +35,7 @@ var (
 	errBannerTooLarge       = errors.New("banner is too large")
 	errBannerUnsupported    = errors.New("unsupported banner format")
 	errBannerDimensions     = errors.New("invalid banner dimensions")
-	uploadedMediaNameRegexp = regexp.MustCompile(`^(?:(?:logo|favicon)-[0-9a-f]{16}\.(?:png|jpg|webp)|banner-[0-9a-f]{16}\.(?:png|gif|mp4)|background-[0-9a-f]{16}\.(?:png|jpg|gif|webp|avif|bmp|svg|mp4|webm|mov|ogv))$`)
+	uploadedMediaNameRegexp = regexp.MustCompile(`^(?:(?:logo|favicon)-[0-9a-f]{16}\.(?:png|jpg|webp)|cursor-[0-9a-f]{16}\.(?:png|cur)|banner-[0-9a-f]{16}\.(?:png|gif|mp4)|background-[0-9a-f]{16}\.(?:png|jpg|gif|webp|avif|bmp|svg|mp4|webm|mov|ogv))$`)
 )
 
 func (h *Handler) handleAdminLogoUpload(w http.ResponseWriter, r *http.Request, sess *session, customer *database.Customer) {
@@ -371,6 +371,8 @@ func (h *Handler) serveUploadedLogo(w http.ResponseWriter, r *http.Request) {
 	setCommonSecurityHeaders(w)
 	w.Header().Set("Cache-Control", "public, max-age=31536000, immutable")
 	switch filepath.Ext(fileName) {
+	case ".cur":
+		w.Header().Set("Content-Type", "image/x-icon")
 	case ".png":
 		w.Header().Set("Content-Type", "image/png")
 	case ".jpg":

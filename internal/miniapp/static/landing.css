@@ -1,6 +1,30 @@
 @font-face{font-family:"JetBrains Mono";src:url("/mini-app/assets/jetbrains-mono-cyrillic.woff2") format("woff2");font-style:normal;font-weight:400 800;font-display:swap;unicode-range:U+0301,U+0400-045F,U+0490-0491,U+04B0-04B1,U+2116}
 @font-face{font-family:"JetBrains Mono";src:url("/mini-app/assets/jetbrains-mono-latin.woff2") format("woff2");font-style:normal;font-weight:400 800;font-display:swap;unicode-range:U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+0304,U+0308,U+0329,U+2000-206F,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD}
 :root{color-scheme:dark;--bg:#080808;--surface:#0b0b0b;--surface-strong:#111111;--text:#f5f5f5;--muted:#a1a1a1;--border:#292929;--accent:#ba173d;--accent-ink:#fff;--success:#41bd76;--danger:#e66b6b;--page-width:1120px}
+body{isolation:isolate}
+.button{border-radius:var(--landing-button-radius,8px)!important}
+.nav-shell{background:color-mix(in srgb,var(--surface) 88%,transparent)!important;border-color:var(--border)!important}
+.landing-custom-icon{width:18px;height:18px;object-fit:contain;flex:none}
+.nav-link svg[hidden],.nav-cabinet svg[hidden]{display:none}
+.hero h1 span[data-landing-text="heroTitle"]{color:var(--text)}
+.landing-background{pointer-events:none;overflow:hidden;position:absolute;inset:0;z-index:-1;background:var(--bg)}
+#landing-shared-background{position:fixed;z-index:-1}
+.has-section-background{position:relative;isolation:isolate}
+.has-section-background>.landing-background{left:calc(50% - 50vw);right:calc(50% - 50vw)}
+.landing-background[hidden]{display:none}
+.landing-background__pattern{position:absolute;inset:-10%;opacity:calc(1 - var(--background-dimming,.12));background:none}
+.landing-background[data-mode="grid"] .landing-background__pattern,.landing-background[data-mode="grid2"] .landing-background__pattern{background-image:linear-gradient(color-mix(in srgb,var(--accent) 12%,transparent) 1px,transparent 1px),linear-gradient(90deg,color-mix(in srgb,var(--accent) 12%,transparent) 1px,transparent 1px);background-size:48px 48px;animation:landing-grid 24s linear infinite}
+.landing-background[data-mode="grid2"] .landing-background__pattern{background-image:radial-gradient(ellipse at 50% 95%,color-mix(in srgb,var(--accent) 20%,transparent),transparent 60%),linear-gradient(var(--border) 1px,transparent 1px),linear-gradient(90deg,var(--border) 1px,transparent 1px);animation:none}
+.landing-background[data-mode="animated"] .landing-background__pattern{background:radial-gradient(ellipse at 25% 70%,color-mix(in srgb,var(--accent) 16%,transparent),transparent 55%),radial-gradient(circle,var(--border) 1px,transparent 1px);background-size:auto,22px 22px;animation:landing-wave 18s ease-in-out infinite alternate}
+.landing-background[data-mode="blocks"] .landing-background__pattern{background:repeating-conic-gradient(from 45deg,color-mix(in srgb,var(--surface-strong) 65%,transparent) 0% 25%,transparent 0% 50%) 0 0/90px 90px;animation:landing-grid 35s linear infinite}
+.landing-background[data-mode="morphic"] .landing-background__pattern{background:radial-gradient(ellipse at 30% 35%,color-mix(in srgb,var(--accent) 20%,transparent),transparent 35%),radial-gradient(ellipse at 70% 70%,color-mix(in srgb,var(--accent) 12%,transparent),transparent 40%);animation:landing-wave 12s ease-in-out infinite alternate}
+.landing-background[data-mode="twinkle"] .landing-background__pattern{background:radial-gradient(circle at 20% 20%,var(--muted) 1px,transparent 2px) 0 0/77px 91px;animation:landing-stars 6s ease-in-out infinite alternate}
+.landing-background>.custom-background__media{position:absolute;top:0;left:0;max-width:none;max-height:none;object-fit:cover}
+.landing-background::after{content:"";position:absolute;inset:0;background:rgba(0,0,0,var(--custom-dimming,0))}
+@keyframes landing-grid{to{transform:translate(48px,48px)}}
+@keyframes landing-wave{to{transform:translateY(3%) scale(1.04)}}
+@keyframes landing-stars{to{opacity:.3}}
+@media(prefers-reduced-motion:reduce){.landing-background__pattern{animation:none!important}}
 *{box-sizing:border-box}
 html{scroll-behavior:smooth;scroll-padding-top:94px;scrollbar-gutter:stable}
 body{min-width:320px;min-height:100vh;margin:0;overflow-x:hidden;background:var(--bg);color:var(--text);font:400 14px/1.7 "JetBrains Mono",Consolas,monospace}

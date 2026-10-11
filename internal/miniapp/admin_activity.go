@@ -34,7 +34,8 @@ var activityReadRoutes = map[string]bool{
 	"status": true, "finance": true, "analytics": true, "ai/settings": true, "ai/models": true,
 	"smtp/settings": true, "moynalog/state": true, "partners/state": true, "push/state": true,
 	"broadcast/state": true, "broadcast/email/state": true, "users/message/state": true,
-	"users/search": true, "administrators/list": true, "administrators/logs": true,
+	"broadcast/audience/options": true,
+	"users/search":               true, "administrators/list": true, "administrators/logs": true,
 	"users/detail": true, "subscriptions/find/refresh": true, "subscriptions/target/refresh": true,
 }
 var activityActions = map[string]activityAction{
@@ -72,6 +73,7 @@ var activityActions = map[string]activityAction{
 	"smtp/test":                   {"Отправил тестовое письмо", "communication", "email"},
 	"broadcast/capture/start":     {"Начал создание рассылки", "communication", ""},
 	"broadcast/buttons":           {"Изменил кнопки рассылки", "communication", "buttons"},
+	"broadcast/audience":          {"Изменил получателей рассылки", "communication", "channel audience"},
 	"broadcast/preview":           {"Проверил рассылку", "communication", ""},
 	"broadcast/send":              {"Запустил рассылку в Telegram", "communication", ""},
 	"broadcast/reset":             {"Очистил черновик рассылки", "communication", ""},
@@ -86,6 +88,7 @@ var activityActions = map[string]activityAction{
 	"logo/upload":                 {"Загрузил логотип", "settings", ""}, "favicon/upload": {"Загрузил иконку сайта", "settings", ""},
 	"banner/upload": {"Загрузил баннер", "settings", ""}, "events/resolve": {"Закрыл событие диагностики", "system", "id"},
 	"background/upload": {"Загрузил свой фон", "settings", ""},
+	"cursor/upload":     {"Загрузил свой курсор", "settings", ""},
 	"background/import": {"Добавил фон по ссылке", "settings", ""},
 	"moynalog/test":     {"Проверил подключение «Мой налог»", "system", ""}, "moynalog/retry": {"Повторил отправку чека", "system", "purchaseId"},
 	"push/subscribe": {"Включил push-уведомления", "system", ""}, "push/unsubscribe": {"Выключил push-уведомления", "system", ""},

@@ -30,6 +30,7 @@ type BroadcastButton struct {
 }
 
 type BroadcastDraft struct {
+	Audience        BroadcastAudience `json:"audience"`
 	Status          string            `json:"status"`
 	SourceChatID    *int64            `json:"-"`
 	SourceMessageID *int              `json:"-"`
@@ -63,7 +64,7 @@ func (r *BroadcastRepository) Get(ctx context.Context) (*BroadcastDraft, error) 
 	return scanBroadcastDraft(r.pool.QueryRow(ctx, `
 		SELECT status, source_chat_id, source_message_id, source_kind, source_preview, source_html,
 		       buttons, recipient_count, sent_count, failed_count, last_error,
-		       updated_by, started_at, finished_at, updated_at
+		       updated_by, started_at, finished_at, updated_at, audience
 		FROM bot_broadcast_draft
 		WHERE id = 1
 	`))
@@ -75,11 +76,11 @@ func (r *BroadcastRepository) StartCapture(ctx context.Context, updatedBy int64)
 		SET status = 'awaiting_message', source_chat_id = NULL, source_message_id = NULL,
 		    source_kind = '', source_preview = '', source_html = '', recipient_count = 0, sent_count = 0,
 		    failed_count = 0, last_error = '', started_at = NULL, finished_at = NULL,
-		    updated_by = $1, updated_at = NOW()
+		    updated_by = $1, updated_at = GREATEST(NOW(), updated_at + INTERVAL '1 microsecond')
 		WHERE id = 1 AND status <> 'running'
 		RETURNING status, source_chat_id, source_message_id, source_kind, source_preview, source_html,
 		          buttons, recipient_count, sent_count, failed_count, last_error,
-		          updated_by, started_at, finished_at, updated_at
+		          updated_by, started_at, finished_at, updated_at, audience
 	`, updatedBy))
 }
 
@@ -89,11 +90,11 @@ func (r *BroadcastRepository) SaveSource(ctx context.Context, chatID int64, mess
 		SET status = 'draft', source_chat_id = $1, source_message_id = $2,
 		    source_kind = $3, source_preview = $4, source_html = $5, recipient_count = 0, sent_count = 0,
 		    failed_count = 0, last_error = '', started_at = NULL, finished_at = NULL,
-		    updated_by = $6, updated_at = NOW()
+		    updated_by = $6, updated_at = GREATEST(NOW(), updated_at + INTERVAL '1 microsecond')
 		WHERE id = 1 AND status = 'awaiting_message' AND updated_by = $6
 		RETURNING status, source_chat_id, source_message_id, source_kind, source_preview, source_html,
 		          buttons, recipient_count, sent_count, failed_count, last_error,
-		          updated_by, started_at, finished_at, updated_at
+		          updated_by, started_at, finished_at, updated_at, audience
 	`, chatID, messageID, kind, preview, sourceHTML, updatedBy))
 }
 
@@ -104,32 +105,33 @@ func (r *BroadcastRepository) SaveButtons(ctx context.Context, buttons []Broadca
 	}
 	return scanBroadcastDraft(r.pool.QueryRow(ctx, `
 		UPDATE bot_broadcast_draft
-		SET buttons = $1, updated_by = $2, updated_at = NOW()
+		SET buttons = $1, updated_by = $2, updated_at = GREATEST(NOW(), updated_at + INTERVAL '1 microsecond')
 		WHERE id = 1 AND status <> 'running'
 		RETURNING status, source_chat_id, source_message_id, source_kind, source_preview, source_html,
 		          buttons, recipient_count, sent_count, failed_count, last_error,
-		          updated_by, started_at, finished_at, updated_at
+		          updated_by, started_at, finished_at, updated_at, audience
 	`, raw, updatedBy))
 }
 
-func (r *BroadcastRepository) BeginSend(ctx context.Context, recipientCount int, updatedBy int64) (*BroadcastDraft, error) {
+func (r *BroadcastRepository) BeginSend(ctx context.Context, recipientCount int, updatedBy int64, expected time.Time) (*BroadcastDraft, error) {
 	return scanBroadcastDraft(r.pool.QueryRow(ctx, `
 		UPDATE bot_broadcast_draft
 		SET status = 'running', recipient_count = $1, sent_count = 0, failed_count = 0,
 		    last_error = '', started_at = NOW(), finished_at = NULL,
-		    updated_by = $2, updated_at = NOW()
+		    updated_by = $2, updated_at = GREATEST(NOW(), updated_at + INTERVAL '1 microsecond')
 		WHERE id = 1 AND status <> 'running'
 		  AND source_chat_id IS NOT NULL AND source_message_id IS NOT NULL
+		  AND updated_at = $3
 		RETURNING status, source_chat_id, source_message_id, source_kind, source_preview, source_html,
 		          buttons, recipient_count, sent_count, failed_count, last_error,
-		          updated_by, started_at, finished_at, updated_at
-	`, recipientCount, updatedBy))
+		          updated_by, started_at, finished_at, updated_at, audience
+	`, recipientCount, updatedBy, expected))
 }
 
 func (r *BroadcastRepository) UpdateProgress(ctx context.Context, sent, failed int, lastError string) error {
 	_, err := r.pool.Exec(ctx, `
 		UPDATE bot_broadcast_draft
-		SET sent_count = $1, failed_count = $2, last_error = $3, updated_at = NOW()
+		SET sent_count = $1, failed_count = $2, last_error = $3, updated_at = GREATEST(NOW(), updated_at + INTERVAL '1 microsecond')
 		WHERE id = 1 AND status = 'running'
 	`, sent, failed, lastError)
 	return err
@@ -139,7 +141,7 @@ func (r *BroadcastRepository) Finish(ctx context.Context, status string, sent, f
 	_, err := r.pool.Exec(ctx, `
 		UPDATE bot_broadcast_draft
 		SET status = $1, sent_count = $2, failed_count = $3, last_error = $4,
-		    finished_at = NOW(), updated_at = NOW()
+		    finished_at = NOW(), updated_at = GREATEST(NOW(), updated_at + INTERVAL '1 microsecond')
 		WHERE id = 1
 	`, status, sent, failed, lastError)
 	return err
@@ -149,13 +151,13 @@ func (r *BroadcastRepository) Reset(ctx context.Context, updatedBy int64) (*Broa
 	return scanBroadcastDraft(r.pool.QueryRow(ctx, `
 		UPDATE bot_broadcast_draft
 		SET status = 'idle', source_chat_id = NULL, source_message_id = NULL,
-		    source_kind = '', source_preview = '', source_html = '', buttons = '[]'::jsonb,
+		    source_kind = '', source_preview = '', source_html = '', buttons = '[]'::jsonb, audience = '{}'::jsonb,
 		    recipient_count = 0, sent_count = 0, failed_count = 0, last_error = '',
-		    started_at = NULL, finished_at = NULL, updated_by = $1, updated_at = NOW()
+		    started_at = NULL, finished_at = NULL, updated_by = $1, updated_at = GREATEST(NOW(), updated_at + INTERVAL '1 microsecond')
 		WHERE id = 1 AND status <> 'running'
 		RETURNING status, source_chat_id, source_message_id, source_kind, source_preview, source_html,
 		          buttons, recipient_count, sent_count, failed_count, last_error,
-		          updated_by, started_at, finished_at, updated_at
+		          updated_by, started_at, finished_at, updated_at, audience
 	`, updatedBy))
 }
 
@@ -163,7 +165,7 @@ func (r *BroadcastRepository) RecoverInterrupted(ctx context.Context) error {
 	_, err := r.pool.Exec(ctx, `
 		UPDATE bot_broadcast_draft
 		SET status = 'failed', last_error = 'Рассылка прервана перезапуском бота',
-		    finished_at = NOW(), updated_at = NOW()
+		    finished_at = NOW(), updated_at = GREATEST(NOW(), updated_at + INTERVAL '1 microsecond')
 		WHERE id = 1 AND status = 'running'
 	`)
 	return err
@@ -175,17 +177,23 @@ type broadcastRowScanner interface {
 
 func scanBroadcastDraft(row broadcastRowScanner) (*BroadcastDraft, error) {
 	var draft BroadcastDraft
-	var rawButtons []byte
+	var rawButtons, rawAudience []byte
 	err := row.Scan(
 		&draft.Status, &draft.SourceChatID, &draft.SourceMessageID, &draft.SourceKind,
 		&draft.SourcePreview, &draft.SourceHTML, &rawButtons, &draft.RecipientCount, &draft.SentCount,
 		&draft.FailedCount, &draft.LastError, &draft.UpdatedBy, &draft.StartedAt,
-		&draft.FinishedAt, &draft.UpdatedAt,
+		&draft.FinishedAt, &draft.UpdatedAt, &rawAudience,
 	)
 	if err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
 			return nil, nil
 		}
+		return nil, err
+	}
+	if err := json.Unmarshal(rawAudience, &draft.Audience); err != nil {
+		return nil, err
+	}
+	if err := draft.Audience.Normalize(); err != nil {
 		return nil, err
 	}
 	if len(rawButtons) > 0 {

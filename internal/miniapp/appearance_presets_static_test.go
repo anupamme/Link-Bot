@@ -8,7 +8,7 @@ import (
 )
 
 var (
-	appearancePresetBlockPattern = regexp.MustCompile(`(?s)\{\s*id:\s*"([^"]+)",\s*name:\s*"([^"]+)",\s*colors:\s*\{(.*?)\n\t\t\},\n\t\},`)
+	appearancePresetBlockPattern = regexp.MustCompile(`(?s)\{\s*id:\s*"([^"]+)",\s*name:\s*"([^"]+)",\s*colors:\s*\{(.*?)\r?\n\t\t\},\r?\n\t\},`)
 	appearancePresetColorPattern = regexp.MustCompile(`(?m)^\s+([A-Za-z][A-Za-z0-9]*):\s*"(#[0-9a-fA-F]{6})",\s*$`)
 )
 

@@ -31,13 +31,16 @@ type landingContactPayload struct {
 }
 
 type landingPayload struct {
-	Brand          brandPayload            `json:"brand"`
-	Colors         map[string]string       `json:"colors"`
-	Glass          bool                    `json:"glass"`
-	Plans          []planPayload           `json:"plans"`
-	Nodes          []landingNodePayload    `json:"nodes"`
-	NodesAvailable bool                    `json:"nodesAvailable"`
-	Contacts       []landingContactPayload `json:"contacts"`
+	Brand          brandPayload                     `json:"brand"`
+	Colors         map[string]string                `json:"colors"`
+	Landing        runtimeconfig.LandingSettings    `json:"landing"`
+	Appearance     runtimeconfig.AppearanceSettings `json:"appearance"`
+	Cursor         runtimeconfig.CursorSettings     `json:"cursor"`
+	Glass          bool                             `json:"glass"`
+	Plans          []planPayload                    `json:"plans"`
+	Nodes          []landingNodePayload             `json:"nodes"`
+	NodesAvailable bool                             `json:"nodesAvailable"`
+	Contacts       []landingContactPayload          `json:"contacts"`
 }
 
 var landingTelegramUsername = regexp.MustCompile(`(?i)^[a-z0-9_]{5,32}$`)
@@ -103,6 +106,7 @@ func (h *Handler) serveLanding(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	settings := h.landingSettings()
+	_ = runtimeconfig.NormalizeAndValidate(&settings)
 	brandName := strings.TrimSpace(settings.Content.BrandName)
 	if brandName == "" {
 		brandName = runtimeconfig.DefaultSettings().Content.BrandName
@@ -111,7 +115,7 @@ func (h *Handler) serveLanding(w http.ResponseWriter, r *http.Request) {
 	if faviconURL == "/mini-app/assets/brand-mark.png" {
 		faviconURL += "?v=" + h.assetVersion
 	}
-	initialTheme, background := landingInitialTheme(settings.Appearance.Colors)
+	initialTheme, background := landingInitialTheme(settings.Appearance.Landing.Colors)
 	data = bytes.ReplaceAll(data, []byte("__BRAND_NAME__"), []byte(html.EscapeString(brandName)))
 	data = bytes.ReplaceAll(data, []byte("__PAGE_DESCRIPTION__"), []byte(html.EscapeString(settings.Content.WebPage.Description)))
 	data = bytes.ReplaceAll(data, []byte("__FAVICON_URL__"), []byte(html.EscapeString(faviconURL)))
@@ -143,6 +147,7 @@ func (h *Handler) handleLandingData(w http.ResponseWriter, r *http.Request) {
 	}
 
 	settings := h.landingSettings()
+	_ = runtimeconfig.NormalizeAndValidate(&settings)
 	plans := h.buildPlans()
 	sort.SliceStable(plans, func(i, j int) bool {
 		left, right := landingPlanDays(plans[i]), landingPlanDays(plans[j])
@@ -157,7 +162,7 @@ func (h *Handler) handleLandingData(w http.ResponseWriter, r *http.Request) {
 
 	colors := make(map[string]string)
 	for _, name := range []string{"background", "surface", "surfaceStrong", "text", "muted", "border", "accent", "success", "danger"} {
-		colors[name] = settings.Appearance.Colors[name]
+		colors[name] = settings.Appearance.Landing.Colors[name]
 	}
 	nodes, nodesAvailable := h.landingNodeStatus()
 	h.writeJSON(w, http.StatusOK, map[string]any{
@@ -168,6 +173,9 @@ func (h *Handler) handleLandingData(w http.ResponseWriter, r *http.Request) {
 				LogoURL: settings.Content.LogoURL,
 			},
 			Colors:         colors,
+			Landing:        settings.Appearance.Landing,
+			Appearance:     settings.Appearance,
+			Cursor:         settings.Appearance.Cursors["landing"],
 			Glass:          settings.Appearance.Glass,
 			Plans:          plans,
 			Nodes:          nodes,

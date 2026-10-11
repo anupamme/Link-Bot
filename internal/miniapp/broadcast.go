@@ -3,6 +3,7 @@ package miniapp
 import (
 	"errors"
 	"net/http"
+	"time"
 
 	"link-bot/internal/broadcast"
 	"link-bot/internal/database"
@@ -10,6 +11,10 @@ import (
 
 type adminBroadcastButtonsRequest struct {
 	Buttons []database.BroadcastButton `json:"buttons"`
+}
+
+type adminBroadcastSendRequest struct {
+	UpdatedAt time.Time `json:"updatedAt"`
 }
 
 func (h *Handler) handleAdminBroadcastState(w http.ResponseWriter, r *http.Request, sess *session, customer *database.Customer) {
@@ -69,7 +74,11 @@ func (h *Handler) handleAdminBroadcastSend(w http.ResponseWriter, r *http.Reques
 	if !h.requireBroadcastAdmin(w, sess) {
 		return
 	}
-	draft, err := h.broadcastService.Start(r.Context(), sess.User.ID)
+	var req adminBroadcastSendRequest
+	if err := h.decodeJSONRequest(w, r, 2048, &req); err != nil {
+		return
+	}
+	draft, err := h.broadcastService.Start(r.Context(), sess.User.ID, req.UpdatedAt)
 	if err != nil {
 		h.writeBroadcastError(w, err)
 		return
@@ -103,6 +112,8 @@ func (h *Handler) requireBroadcastAdmin(w http.ResponseWriter, sess *session) bo
 
 func (h *Handler) writeBroadcastError(w http.ResponseWriter, err error) {
 	switch {
+	case errors.Is(err, broadcast.ErrDraftChanged):
+		h.writeError(w, http.StatusConflict, "broadcast_draft_changed", "Черновик изменился. Проверьте сообщение и аудиторию ещё раз")
 	case errors.Is(err, broadcast.ErrRunning):
 		h.writeError(w, http.StatusConflict, "broadcast_running", "Рассылка уже запущена")
 	case errors.Is(err, broadcast.ErrNoMessage):

@@ -290,6 +290,7 @@ function Field({ node, label, toggle = false, ...props }) {
     ref,
     label,
     defaultValue: isCheck || node.type === "file" ? undefined : node.value,
+    ...(isCheck ? { value: node.value } : {}),
   };
   if (isCheck) {
     const Control = toggle ? Switch : Checkbox;
@@ -1382,6 +1383,8 @@ function Admin({ model, content, dialogs, dispatch }) {
       [
         "content",
         "appearance",
+        "landing",
+        "cursors",
         "layout",
         "localization",
         "features",

@@ -44,6 +44,8 @@ export const CONSOLE_GROUPS = [
   ["Интерфейс", "Interface", [
     ["content", "Редактор контента", "Content editor", "adminContent", "content"],
     ["appearance", "Оформление", "Appearance", "adminAppearance", "appearance"],
+ ["landing","Лендинг","Landing","adminAppearance","appearance"],
+ ["cursors","Курсоры","Cursors","adminAppearance","appearance"],
     ["layout", "Конструктор UI", "UI builder", "grid", "layout"],
     ["subpage", "Страница подписки", "Subscription page", "adminSubscriptions", "subpage"],
     ["localization", "Язык и шрифт", "Language & font", "language", "localization"],

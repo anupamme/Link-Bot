@@ -183,7 +183,7 @@ func adminRouteAllowed(a adminAccess, path string) bool {
 		return a.can("servers.manage")
 	case "wallet/withdrawal/resolve":
 		return a.can("wallet.withdrawals")
-	case "background/upload", "background/import":
+	case "background/upload", "background/import", "cursor/upload":
 		return a.can("appearance")
 	case "logo/upload", "favicon/upload", "banner/upload", "reminders/test", "success/test", "payment-notifications/test", "gifts/test":
 		return a.can("content")
@@ -206,7 +206,7 @@ func adminRouteAllowed(a adminAccess, path string) bool {
 		"moynalog":      {"moynalog/state", "moynalog/test", "moynalog/retry"},
 		"partners":      {"partners/state", "partners/review", "partners/create", "partners/update"},
 		"push":          {"push/state", "push/subscribe", "push/unsubscribe", "push/test"},
-		"broadcast":     {"broadcast/state", "broadcast/capture/start", "broadcast/buttons", "broadcast/preview", "broadcast/send", "broadcast/reset", "broadcast/email/state", "broadcast/email/save", "broadcast/email/preview", "broadcast/email/send"},
+		"broadcast":     {"broadcast/audience", "broadcast/audience/options", "broadcast/state", "broadcast/capture/start", "broadcast/buttons", "broadcast/preview", "broadcast/send", "broadcast/reset", "broadcast/email/state", "broadcast/email/save", "broadcast/email/preview", "broadcast/email/send"},
 		"users.message": {"users/message/state", "users/message/capture", "users/message/preview", "users/message/send"},
 	} {
 		for _, knownRoute := range routes {

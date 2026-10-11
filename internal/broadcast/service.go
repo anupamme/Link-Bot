@@ -31,6 +31,7 @@ const (
 
 var (
 	ErrRunning       = errors.New("broadcast is already running")
+	ErrDraftChanged  = errors.New("broadcast draft changed")
 	ErrNoMessage     = errors.New("broadcast message is not selected")
 	ErrInvalidButton = errors.New("invalid broadcast button")
 	ErrInvalidHTML   = errors.New("invalid broadcast HTML")
@@ -46,10 +47,24 @@ type Service struct {
 	promoRepository    *database.PromoCodeRepository
 	telegramBot        *bot.Bot
 	sendMu             sync.Mutex
+	audienceResolver   func(context.Context, database.BroadcastAudience) ([]int64, error)
 }
 
 func NewService(repository *database.BroadcastRepository, customerRepository *database.CustomerRepository, promoRepository *database.PromoCodeRepository, telegramBot *bot.Bot) *Service {
 	return &Service{repository: repository, customerRepository: customerRepository, promoRepository: promoRepository, telegramBot: telegramBot}
+}
+
+func (s *Service) SetAudienceResolver(resolve func(context.Context, database.BroadcastAudience) ([]int64, error)) {
+	s.audienceResolver = resolve
+}
+
+func (s *Service) SaveAudience(ctx context.Context, adminID int64, a database.BroadcastAudience) (*database.BroadcastDraft, error) {
+	s.sendMu.Lock()
+	defer s.sendMu.Unlock()
+	if err := a.Normalize(); err != nil {
+		return nil, err
+	}
+	return s.repository.SaveAudience(ctx, a, adminID)
 }
 
 func (s *Service) RecoverInterrupted(ctx context.Context) error {
@@ -239,7 +254,7 @@ func (s *Service) Preview(ctx context.Context, adminID int64) (*database.Broadca
 	return draft, nil
 }
 
-func (s *Service) Start(ctx context.Context, adminID int64) (*database.BroadcastDraft, error) {
+func (s *Service) Start(ctx context.Context, adminID int64, expected ...time.Time) (*database.BroadcastDraft, error) {
 	s.sendMu.Lock()
 	defer s.sendMu.Unlock()
 
@@ -253,7 +268,17 @@ func (s *Service) Start(ctx context.Context, adminID int64) (*database.Broadcast
 	if draft.Status == database.BroadcastStatusRunning {
 		return nil, ErrRunning
 	}
-	targetIDs, err := s.customerRepository.ListAllTelegramIDs(ctx)
+	if len(expected) > 0 && !expected[0].IsZero() && !draft.UpdatedAt.Equal(expected[0]) {
+		return nil, ErrDraftChanged
+	}
+	var targetIDs []int64
+	if s.audienceResolver != nil {
+		targetIDs, err = s.audienceResolver(ctx, draft.Audience)
+	} else if draft.Audience.Category == "" || draft.Audience.Category == "all" && len(draft.Audience.InternalSquads) == 0 && len(draft.Audience.ExternalSquads) == 0 && draft.Audience.Tag == "" && draft.Audience.Language == "" {
+		targetIDs, err = s.customerRepository.ListAllTelegramIDs(ctx)
+	} else {
+		return nil, errors.New("audience resolver is unavailable")
+	}
 	if err != nil {
 		return nil, err
 	}
@@ -261,7 +286,7 @@ func (s *Service) Start(ctx context.Context, adminID int64) (*database.Broadcast
 	if len(targets) == 0 {
 		return nil, errors.New("broadcast recipient list is empty")
 	}
-	draft, err = s.repository.BeginSend(ctx, len(targets), adminID)
+	draft, err = s.repository.BeginSend(ctx, len(targets), adminID, draft.UpdatedAt)
 	if err != nil {
 		return nil, normalizeRepositoryStateError(err)
 	}

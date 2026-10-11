@@ -35,9 +35,9 @@ test("SMTP requests send only fields accepted by the strict server decoder", asy
 
 test("SMTP settings are inside email broadcast and remain independently restricted", async () => {
   const source=fs.readFileSync(new URL("./static/app.js",import.meta.url),"utf8");
-  const state={locale:"ru",adminSMTP:{draft:{host:"smtp.example.com"}},adminEmailBroadcast:{},adminBroadcastTab:"email",adminEmailEditorTab:"message"};
+  const state={locale:"ru",adminSMTP:{draft:{host:"smtp.example.com"}},adminEmailBroadcast:{},adminAudienceCount:{},adminBroadcastTab:"email",adminEmailEditorTab:"message"};
   let permissions=new Set(["smtp"]);
-  const context=vm.createContext({state,canAdmin:p=>permissions.has(p),emailAuthText:s=>s,...helpers,pageClass:()=>"",renderSMTPSettings, broadcastStatusLabel:()=>"Пусто"});
+  const context=vm.createContext({state,canAdmin:p=>permissions.has(p),emailAuthText:s=>s,...helpers,pageClass:()=>"",renderCurrentAudience:()=>"",renderSMTPSettings, broadcastStatusLabel:()=>"Пусто"});
   vm.runInContext(source.slice(source.indexOf("function canAdminSection("),source.indexOf("function getBottomNavPages(")),context);
   vm.runInContext(source.slice(source.indexOf("function renderAdminBroadcastTabs("),source.indexOf("function renderAdminBroadcastButton(")),context);
   assert.equal(context.canAdminSection("broadcast"),true);
