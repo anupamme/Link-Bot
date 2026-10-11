@@ -14133,7 +14133,7 @@ body.is-layout-editing .layout-editor-grid { background: none; }
   .admin-nav-option { transition: none; }
 }
 
-/* Language editor controls use the same material as the cabinet cards. */
+/* Admin dropdowns use the language/font selector and cabinet card material. */
 .admin-localization-select {
   width: 100%; min-width: 0; min-height: 44px; padding: 11px 36px 11px 14px;
   position: relative; text-align: start; font: inherit; font-size: 12px; font-weight: 700;
@@ -14146,6 +14146,8 @@ body.is-layout-editing .layout-editor-grid { background: none; }
   border-bottom: 1.5px solid var(--icon-color); transform: rotate(45deg);
 }
 .admin-localization-select[aria-expanded="true"]::after { top: 20px; transform: rotate(225deg); }
+.admin-localization-select:disabled,
+.admin-localization-menu__option:disabled { opacity: .45; cursor: default; }
 .admin-localization-select:focus-visible,
 .admin-localization-menu__option:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
 .admin-localization-menu {
@@ -14156,11 +14158,11 @@ body.is-layout-editing .layout-editor-grid { background: none; }
 }
 .admin-localization-menu__option {
   position: relative; width: 100%; min-height: 44px; display: block;
-  padding: 10px 30px 10px 12px; border: 0; border-radius: 8px;
+  padding-block: 10px; padding-inline: 12px 30px; border: 0; border-radius: 8px;
   background: transparent; color: var(--text); text-align: start;
   font: inherit; font-size: 12px; font-weight: 600; cursor: pointer;
 }
-.admin-localization-menu__option:is(:hover, :focus-visible, [aria-selected="true"]) {
+.admin-localization-menu__option:not(:disabled):is(:hover, :focus-visible, [aria-selected="true"]) {
   background: color-mix(in srgb, var(--text) 8%, transparent);
 }
 .admin-localization-menu__option[aria-selected="true"]::after {

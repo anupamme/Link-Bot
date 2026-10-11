@@ -1,36 +1,44 @@
 let closeMenu = null;
+let nextControlID = 0;
 
 export function closeLocalizationMenu() {
   closeMenu?.();
 }
 
-// Keep native selects as the source of values and change events. Enhance only
-// this cabinet editor so its popup can share the configured card material.
+// Keep native selects as the source of values and change events. Admin fields
+// share the language/font popup and the configured card material.
 export function mountLocalizationSelects(root) {
-  for (const select of root.querySelectorAll('.admin-localization select')) {
-    if (select.hidden) continue;
+  for (const select of root.querySelectorAll('.admin-localization select, select.admin-field__control')) {
+    if (select.hidden || select.multiple) continue;
     const label = select.closest('label');
+    if (!label || !label.querySelector('span')) continue;
     const field = document.createElement('div');
     field.className = label.className;
     field.append(...label.childNodes);
     label.replaceWith(field);
     select.hidden = true;
-    const key = select.dataset.settingPath.replaceAll('.', '-');
+    const key = `admin-select-${++nextControlID}`;
     const caption = field.querySelector('span');
     caption.id = `${key}-label`;
     const trigger = document.createElement('button');
     trigger.type = 'button';
     trigger.className = 'admin-localization-select';
-    trigger.dataset.localizationControl = select.dataset.settingPath;
+    trigger.dataset.localizationControl = select.dataset.settingPath || select.dataset.input || key;
     trigger.setAttribute('role', 'combobox');
     trigger.setAttribute('aria-haspopup', 'listbox');
     trigger.setAttribute('aria-expanded', 'false');
     trigger.setAttribute('aria-labelledby', caption.id);
     trigger.setAttribute('aria-controls', `${key}-menu`);
-    trigger.textContent = select.selectedOptions[0]?.textContent || '';
+    const sync = () => {
+      trigger.textContent = select.selectedOptions[0]?.textContent || '';
+      trigger.disabled = select.disabled;
+    };
+    sync();
+    select.addEventListener('change', sync);
     field.append(trigger);
 
     function open() {
+      if (select.disabled) return;
       closeLocalizationMenu();
       const controller = new AbortController();
       const menu = document.createElement('div');
@@ -47,7 +55,7 @@ export function mountLocalizationSelects(root) {
         item.setAttribute('aria-selected', String(option.selected));
         item.tabIndex = -1;
         item.textContent = option.textContent;
-        item.disabled = option.disabled;
+        item.disabled = option.disabled || option.parentElement?.disabled === true;
         item.addEventListener('click', () => {
           select.value = option.value;
           trigger.textContent = option.textContent;
@@ -80,6 +88,7 @@ export function mountLocalizationSelects(root) {
       const options = items.filter(item => !item.disabled);
       const focus = index => options[(index + options.length) % options.length]?.focus({ preventScroll: true });
       focus(Math.max(0, options.indexOf(items[select.selectedIndex])));
+      document.activeElement?.scrollIntoView({ block: 'nearest' });
       let search = '', typedAt = 0;
       menu.addEventListener('keydown', event => {
         const index = options.indexOf(document.activeElement);
