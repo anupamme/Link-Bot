@@ -176,3 +176,97 @@ html[data-admin-console="on"] .rn-main :is(.rn-clickable-card, .rn-settings-pane
 #app :is(#page-admin, .rn-content) .admin-activity__entry > summary { padding: 9px 10px; grid-template-columns: 22px minmax(0, 1fr) auto; }
 #app :is(#page-admin, .rn-content) .admin-activity__body { padding: 0 10px 10px; gap: 8px; }
 #app :is(#page-admin, .rn-content) .admin-access :is(button, summary):focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+/* Lists are collections of separate cards, without a second shared pane. */
+#app :is(#page-admin, .rn-content) .admin-access .admin-users__list {
+  display: grid; gap: 8px; overflow: visible; padding: 0;
+  border: 0 !important; border-radius: 0; background: transparent !important;
+  background-image: none !important; box-shadow: none !important;
+  backdrop-filter: none !important; -webkit-backdrop-filter: none !important;
+}
+
+#app :is(#page-admin, .rn-content) :is(.admin-referrals, .admin-partners, .admin-broadcast, .admin-promo-admin) { display: grid; gap: 12px; }
+#app :is(#page-admin, .rn-content) :is(
+  .admin-referrals > .admin-editor__section, .admin-partners__create,
+  .admin-broadcast__section, .admin-mail__form, .admin-mail__delivery,
+  .admin-promo-panel, .admin-withdrawal
+) {
+  min-width: 0; display: grid; gap: 12px; margin: 0; padding: 12px;
+  border: 1px solid var(--line); border-radius: 10px; background: var(--surface);
+}
+#app :is(#page-admin, .rn-content) :is(.admin-referrals .admin-editor__section-head, .admin-promo-panel .admin-editor__section-head, .admin-broadcast__section-head) { margin: 0; }
+#app :is(#page-admin, .rn-content) :is(.admin-referrals, .admin-partners, .admin-broadcast, .admin-promo-admin) :is(
+  .admin-field__control, .admin-localization-select,
+  .admin-partners input, .admin-email-broadcast__field input, .admin-email-broadcast__field textarea,
+  .admin-broadcast-button input, .admin-broadcast-button select
+) { color: var(--text); background: var(--surface); border-radius: 7px; }
+#app :is(#page-admin, .rn-content) .admin-referrals :is(.admin-toggle-list, .admin-field) { margin: 0; }
+#app :is(#page-admin, .rn-content) .admin-referrals .admin-toggle-list { gap: 6px; }
+#app :is(#page-admin, .rn-content) .admin-referrals .admin-toggle {
+  min-height: 38px; padding: 8px 10px; border: 1px solid var(--line-soft); border-radius: 7px; background: var(--surface);
+}
+#app :is(#page-admin, .rn-content) :is(
+  .admin-partners input, .admin-partner-entry__actions input
+) { min-height: 36px; padding: 8px 10px; }
+#app :is(#page-admin, .rn-content) .admin-partners__section { display: grid; gap: 8px; }
+#app :is(#page-admin, .rn-content) .admin-partners__heading { margin: 0; }
+#app :is(#page-admin, .rn-content) .admin-partner-entry { border-radius: 10px; }
+#app :is(#page-admin, .rn-content) .admin-partner-entry__summary {
+  min-height: 54px; padding: 8px 10px; grid-template-columns: 36px minmax(0, 1fr) minmax(60px, auto) 16px; background: var(--surface);
+}
+#app :is(#page-admin, .rn-content) .admin-partner-entry__summary .admin-user-avatar { width: 36px; height: 36px; }
+#app :is(#page-admin, .rn-content) .admin-partner-entry__details { padding: 10px; gap: 10px; }
+#app :is(#page-admin, .rn-content) .admin-partner-entry__metrics { border: 0; gap: 6px; }
+#app :is(#page-admin, .rn-content) .admin-partner-entry__metrics > span { min-height: 44px; border: 1px solid var(--line-soft); border-radius: 7px; background: var(--surface); }
+#app :is(#page-admin, .rn-content) .admin-partner-entry__resource { background: var(--surface); border-radius: 7px; }
+#app :is(#page-admin, .rn-content) :is(.admin-partners__empty, .admin-broadcast__empty) { margin: 0; padding: 10px 0; border: 0; }
+#app :is(#page-admin, .rn-content) .admin-broadcast__buttons { gap: 10px; }
+#app :is(#page-admin, .rn-content) .admin-broadcast .admin-broadcast-button { padding: 10px; border: 1px solid var(--line-soft); border-radius: 7px; background: var(--surface); }
+#app :is(#page-admin, .rn-content) .admin-broadcast-button :is(label, .admin-field) { min-width: 0; display: grid; gap: 6px; }
+#app :is(#page-admin, .rn-content) .admin-broadcast-button .admin-field > span { color: var(--muted); }
+#app :is(#page-admin, .rn-content) .admin-broadcast__message { padding: 10px; border: 1px solid var(--line-soft); border-radius: 7px; background: var(--surface); }
+#app :is(#page-admin, .rn-content) :is(.admin-broadcast__primary, .admin-broadcast__secondary, .admin-broadcast__reset) { margin: 0; }
+#app :is(#page-admin, .rn-content) :is(.admin-broadcast__tabs, .admin-mail__tabs, .admin-promo-type-switch, .admin-promo-unit-switch) {
+  padding: 3px; gap: 3px; margin: 0; border: 1px solid var(--line); border-radius: 10px; background: var(--surface);
+}
+#app :is(#page-admin, .rn-content) :is(
+  .admin-broadcast__tabs button, .admin-mail__tabs button,
+  .admin-promo-type-switch button, .admin-promo-unit-switch button,
+  .admin-promo-submit, .admin-mail__button, .admin-withdrawal__actions button
+) { min-height: 36px; padding: 8px 10px; border-radius: 7px; }
+#app :is(#page-admin, .rn-content) :is(.admin-partners, .admin-broadcast, .admin-promo-admin, .admin-referrals) button:not(.admin-icon-button):not(.admin-promo-row__delete) { background: var(--surface); }
+#app :is(#page-admin, .rn-content) :is(.admin-broadcast__send, .admin-mail__button--primary) { color: var(--text) !important; }
+#app :is(#page-admin, .rn-content) :is(.admin-broadcast__tabs, .admin-mail__tabs, .admin-promo-type-switch, .admin-promo-unit-switch) button.is-active { border: 1px solid var(--accent); color: var(--text); background: var(--accent-soft); }
+#app :is(#page-admin, .rn-content) .admin-broadcast .surface-inline > .surface-button { width: 100%; }
+#app :is(#page-admin, .rn-content) .admin-promo-list { display: grid; gap: 8px; }
+#app :is(#page-admin, .rn-content) .admin-promo-admin :is(.admin-field, .admin-promo-submit) { margin: 0; }
+#app :is(#page-admin, .rn-content) .admin-promo-row { padding: 10px; border: 1px solid var(--line); border-radius: 7px; background: var(--surface); }
+#app :is(#page-admin, .rn-content) .admin-promo-row__delete { width: 34px; min-width: 34px; height: 34px; border-radius: 7px; background: var(--surface); }
+@media (max-width: 380px) {
+  #app :is(#page-admin, .rn-content) .admin-partner-entry__summary { grid-template-columns: 36px minmax(0, 1fr) 16px; }
+  #app :is(#page-admin, .rn-content) .admin-partner-entry__actions { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  #app :is(#page-admin, .rn-content) .admin-partner-entry__actions label { grid-column: 1 / -1; }
+}
+@media (max-width: 520px) {
+  #app :is(#page-admin, .rn-content) .admin-referrals .admin-editor__grid--three > :last-child { grid-column: 1 / -1; }
+  #app :is(#page-admin, .rn-content) .admin-broadcast-button__grid { grid-template-columns: 1fr; }
+  #app :is(#page-admin, .rn-content) .admin-broadcast-style > div { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+
+:root[data-glass="on"] #app :is(#page-admin, .rn-content) :is(.admin-referrals, .admin-partners, .admin-broadcast, .admin-promo-admin) :is(
+  .admin-editor__section, .admin-partners__create, .admin-broadcast__section, .admin-mail__form, .admin-mail__delivery,
+  .admin-field__control, .admin-localization-select, .admin-toggle,
+  .admin-partners input, .admin-partners button, .admin-partner-entry__summary,
+  .admin-partner-entry__resource, .admin-partner-entry__metrics > span,
+  .admin-email-broadcast__field input, .admin-email-broadcast__field textarea,
+  .admin-broadcast-button, .admin-broadcast-button input, .admin-broadcast-button select,
+  .admin-broadcast__message, .audience-squads label,
+  .admin-promo-row, .admin-withdrawal,
+  button:not(.admin-localization-menu__option), .admin-broadcast__tabs, .admin-mail__tabs, .admin-promo-type-switch, .admin-promo-unit-switch
+) {
+  background: var(--glass-background) !important; background-image: var(--glass-texture) !important;
+  background-size: 128px 128px, 100% 100%; border-color: var(--glass-border);
+  box-shadow: var(--glass-surface-shadow); backdrop-filter: var(--glass-backdrop); -webkit-backdrop-filter: var(--glass-backdrop);
+}
+:root[data-glass="on"] #app :is(#page-admin, .rn-content) :is(.admin-broadcast__tabs, .admin-mail__tabs, .admin-promo-type-switch, .admin-promo-unit-switch) button.is-active { border-color: var(--accent); }
+:root[data-glass="on"] #app .admin-broadcast-style__option.is-selected { border-color: var(--accent); }
