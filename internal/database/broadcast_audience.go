@@ -71,67 +71,6 @@ type BroadcastSubscription struct {
 	ExpireAt  *time.Time
 }
 
-// Local audiences do not need subscription rows or a full panel download.
-func (a BroadcastAudience) NeedsPanel() bool {
-	return a.Category == "active" || a.Category == "none" || a.Category == "expired" || a.Category == "trial" || len(a.InternalSquads) > 0 || len(a.ExternalSquads) > 0 || a.Tag != ""
-}
-
-const localAudienceWhere = ` NOT c.is_blocked
-	AND ($1 = '' OR c.language = $1)
-	AND ($2 <> 'trial_used' OR c.trial_used)
-	AND ($2 <> 'paid' OR EXISTS(SELECT 1 FROM purchase p WHERE p.customer_id=c.id
-		AND p.status='paid' AND p.purchase_kind='subscription' AND p.amount>0 AND NOT p.is_free_plan))`
-
-func (r *CustomerRepository) CountLocalBroadcastAudience(ctx context.Context, a BroadcastAudience, channel string, excludeTelegramID int64) (int, error) {
-	if err := a.Normalize(); err != nil {
-		return 0, err
-	}
-	if a.NeedsPanel() {
-		return 0, errors.New("audience requires panel resolution")
-	}
-	var query string
-	switch channel {
-	case "telegram":
-		query = `SELECT COUNT(DISTINCT c.telegram_id) FROM customer c WHERE` + localAudienceWhere +
-			` AND c.telegram_id>0 AND NOT c.telegram_id_is_synthetic AND c.telegram_id<>$3`
-	case "email":
-		query = `SELECT COUNT(DISTINCT LOWER(e.email)) FROM customer c JOIN customer_email_auth e ON e.customer_id=c.id WHERE` + localAudienceWhere + ` AND e.email<>''`
-	default:
-		return 0, errors.New("invalid broadcast channel")
-	}
-	args := []any{a.Language, a.Category}
-	if channel == "telegram" {
-		args = append(args, excludeTelegramID)
-	}
-	var count int
-	err := r.pool.QueryRow(ctx, query, args...).Scan(&count)
-	return count, err
-}
-
-func (r *CustomerRepository) LocalBroadcastCustomers(ctx context.Context, a BroadcastAudience) ([]BroadcastCustomer, error) {
-	if err := a.Normalize(); err != nil {
-		return nil, err
-	}
-	if a.NeedsPanel() {
-		return nil, errors.New("audience requires panel resolution")
-	}
-	rows, err := r.pool.Query(ctx, `SELECT c.id,c.telegram_id,c.telegram_id_is_synthetic,COALESCE(e.email,'')
-		FROM customer c LEFT JOIN customer_email_auth e ON e.customer_id=c.id WHERE`+localAudienceWhere, a.Language, a.Category)
-	if err != nil {
-		return nil, err
-	}
-	defer rows.Close()
-	items := []BroadcastCustomer{}
-	for rows.Next() {
-		var c BroadcastCustomer
-		if err := rows.Scan(&c.ID, &c.TelegramID, &c.Synthetic, &c.Email); err != nil {
-			return nil, err
-		}
-		items = append(items, c)
-	}
-	return items, rows.Err()
-}
-
 // One account may own several panel subscriptions. Resolve all of them and
 // deduplicate recipients later, rather than consulting only the primary one.
 func (r *CustomerRepository) BroadcastCustomers(ctx context.Context) ([]BroadcastCustomer, error) {
