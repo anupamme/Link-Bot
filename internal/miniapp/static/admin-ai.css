@@ -1,4 +1,4 @@
-.admin-ai { display: grid; gap: 16px; padding: 8px 0 26px; max-width: 800px; margin-inline: auto; }
+.admin-ai { display: grid; gap: 16px; padding: 8px 0 96px; max-width: 800px; margin-inline: auto; }
 .admin-ai__power { padding: 16px 20px; border: 1px solid var(--line); border-radius: 16px; background: var(--surface); }
 .admin-ai__power span { flex: 1; font-size: 13px; font-weight: 600; }
 .admin-ai__power:focus-within { outline: 2px solid var(--accent); outline-offset: 3px; }
@@ -9,19 +9,25 @@
 .admin-ai__card-title h3 { font-size: 14px; margin: 0; }
 .admin-ai__card-title small { margin-inline-start: auto; color: var(--muted, #9ca3af); font-size: 10px; }
 .admin-ai__card-title small.is-ready { color: #7dd3a3; }
-.admin-ai__button { display: flex; align-items: center; justify-content: center; gap: 8px; min-height: 46px; border-radius: 14px; border: 0; background: var(--accent, #8898ff); color: #fff; font: inherit; font-size: 12px; font-weight: 600; cursor: pointer; padding: 12px 16px; }
+.admin-ai__button { display: flex; align-items: center; justify-content: center; gap: 8px; min-height: 46px; border-radius: 14px; border: 1px solid var(--line); background: var(--surface); color: var(--text); font: inherit; font-size: 12px; font-weight: 600; cursor: pointer; padding: 12px 16px; }
 .admin-ai__button svg { width: 16px; height: 16px; }
-.admin-ai__button--secondary { color: var(--button-text); background: var(--control-bg); border: 1px solid var(--control-border); }
+.admin-ai .admin-field__control { background: var(--surface); color: var(--text); border-color: var(--line); border-radius: 12px; }
 .admin-ai button:disabled { opacity: .5; cursor: wait; }
 .admin-ai__models { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 210px), 1fr)); gap: 8px; max-height: 360px; overflow-y: auto; }
-.admin-ai__model { display: flex; align-items: center; gap: 8px; min-width: 0; min-height: 44px; border-radius: 12px; border: 1px solid rgba(148,163,184,.14); padding: 12px; background: transparent; color: inherit; text-align: start; font: inherit; font-size: 11px; cursor: pointer; }
+.admin-ai__model { display: flex; align-items: center; gap: 8px; min-width: 0; min-height: 44px; border-radius: 12px; border: 1px solid var(--line); padding: 12px; background: var(--surface); color: var(--text); text-align: start; font: inherit; font-size: 11px; cursor: pointer; }
 .admin-ai__model > span { overflow-wrap: anywhere; flex: 1; }
 .admin-ai__model i { width: 16px; height: 16px; flex-shrink: 0; }
 .admin-ai__model svg { width: 16px; height: 16px; }
-.admin-ai__model.is-selected { background: var(--surface-strong); border-color: var(--accent); }
+.admin-ai__model.is-selected { border-color: var(--accent); }
 .admin-ai__prompt { resize: vertical; min-height: 230px; line-height: 1.7; font-size: 12px; }
-.admin-ai__reset { margin-inline-start: auto; background: none; border: 0; color: var(--muted, #9ca3af); font: inherit; font-size: 10px; cursor: pointer; padding: 6px 0 6px 8px; }
-:root[data-glass="on"] :where(.admin-ai__card, .admin-ai__power) { background: var(--glass-background); border-color: var(--glass-border); backdrop-filter: var(--glass-backdrop); -webkit-backdrop-filter: var(--glass-backdrop); }
+.admin-ai__reset { margin-inline-start: auto; min-height: 32px; background: var(--surface); border: 1px solid var(--line); border-radius: 10px; color: var(--text); font: inherit; font-size: 10px; cursor: pointer; padding: 6px 10px; }
+:root[data-glass="on"] :is(.admin-ai__card, .admin-ai__power, .admin-ai .admin-field__control, .admin-ai__button, .admin-ai__model, .admin-ai__reset) {
+  background: var(--glass-background); background-image: var(--glass-texture);
+  background-size: 128px 128px, 100% 100%; border-color: var(--glass-border);
+  box-shadow: var(--glass-surface-shadow); backdrop-filter: var(--glass-backdrop);
+  -webkit-backdrop-filter: var(--glass-backdrop);
+}
+:root[data-glass="on"] .admin-ai__model.is-selected { border-color: var(--accent); }
 .admin-ai__error { margin: 0; color: #f2a6a6; font-size: 12px; line-height: 1.6; }
 .admin-ai__loading { padding: 40px 20px; text-align: center; color: var(--muted, #9ca3af); }
 .support-ai-thinking { display: flex; align-items: center; gap: 8px; min-height: 24px; padding: 3px 18px 6px; color: var(--muted); font-size: 10px; flex-shrink: 0; }

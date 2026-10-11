@@ -45,3 +45,48 @@ test('AI replies remain peer messages for both customer and admin viewers', () =
 		assert.ok(!result.includes('support-message--mine'));
 	}
 });
+
+function saveHarness(post) {
+	const source = fs.readFileSync(new URL('./static/app.js',import.meta.url),'utf8');
+	const state = {
+		currentPage:'admin', adminSection:'ai', adminSettingsDirty:true,
+		adminAI:{dirty:true,busy:'',error:'',draft:{apiUrl:'https://provider.example/v1',apiKey:'test-key',model:'test-model',prompt:'Instructions',handoffAfter:'6',enabled:true}},
+	};
+	const context = vm.createContext({state,previewMode:false,post,render(){},showToast(){}});
+	for (const name of ['adminEditorSaveState','saveAdminSettings','saveAdminAI']) {
+		const start = source.search(new RegExp(`(?:async )?function ${name}\\(`));
+		assert.ok(start>=0,name);
+		const rest = source.slice(start);
+		const next = rest.slice(1).search(/\n(?:async )?function /);
+		vm.runInContext(next<0?rest:rest.slice(0,next+1),context);
+	}
+	return context;
+}
+
+test('the shared save action saves AI fields without changing unrelated runtime drafts', async () => {
+	let complete;
+	const calls=[];
+	const context=saveHarness((url,body)=>{
+		calls.push({url,body:JSON.parse(JSON.stringify(body))});
+		return new Promise(resolve=>{complete=resolve;});
+	});
+	const operation=context.saveAdminSettings();
+	assert.equal(context.adminEditorSaveState().busy,true);
+	assert.equal(context.adminEditorSaveState().saving,true);
+	assert.deepEqual(calls,[{url:'/api/mini-app/admin/ai/update',body:{apiUrl:'https://provider.example/v1',apiKey:'test-key',model:'test-model',prompt:'Instructions',handoffAfter:6,enabled:true}}]);
+	complete({data:{apiUrl:'https://provider.example/v1',model:'test-model',prompt:'Instructions',handoffAfter:6,enabled:true,keyConfigured:true}});
+	await operation;
+	assert.equal(context.state.adminAI.draft.apiKey,'');
+	assert.equal(context.adminEditorSaveState().dirty,false);
+	assert.equal(context.adminEditorSaveState().busy,false);
+	assert.equal(context.state.adminSettingsDirty,true);
+});
+
+test('failed AI saves retain the draft and keep the shared save button available',async()=>{
+	const context=saveHarness(async()=>{throw new Error('offline');});
+	await context.saveAdminSettings();
+	assert.equal(context.state.adminAI.error,'offline');
+	assert.equal(context.state.adminAI.draft.apiKey,'test-key');
+	assert.equal(context.adminEditorSaveState().dirty,true);
+	assert.equal(context.adminEditorSaveState().busy,false);
+});

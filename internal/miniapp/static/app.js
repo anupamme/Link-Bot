@@ -2767,7 +2767,7 @@ const state = {
 	adminFinanceAnimate: false,
 	adminAnalytics: null,
 	adminSMTP: { draft: null, busy: "", error: "", checked: false },
-	adminAI: { draft: null, models: [], verified: false, busy: "", error: "" },
+	adminAI: { draft: null, models: [], verified: false, busy: "", error: "", dirty: false },
 	adminAnalyticsBusy: false,
 	adminAnalyticsPeriod: "7d",
 	adminAnalyticsFrom: "",
@@ -4366,10 +4366,13 @@ function getBottomNavPages() {
 	return pages.filter((page) => PAGES.includes(page) && (page !== "admin" || isAdminUser()) && pageFeatureEnabled(page));
 }
 
-const ADMIN_SAVE_SECTIONS = new Set(["landing", "cursors", "localization", "maintenance", "features", "subpage", "content", "appearance", "layout", "plans", "trial", "referrals", "grace", "moynalog"]);
+const ADMIN_SAVE_SECTIONS = new Set(["landing", "cursors", "localization", "maintenance", "features", "subpage", "content", "appearance", "layout", "plans", "trial", "referrals", "grace", "moynalog", "ai"]);
 let lastBottomDockMode = "navigation";
 
 function adminEditorSaveState() {
+	if (state.currentPage === "admin" && state.adminSection === "ai") {
+		return { dirty: Boolean(state.adminAI.dirty), busy: Boolean(state.adminAI.busy), saving: state.adminAI.busy === "save" };
+	}
 	if (state.currentPage === "admin" && state.adminSection === "moynalog") {
 		return {
 			dirty: Boolean(state.adminIntegrationDrafts.moynalog?.dirty),
@@ -6659,6 +6662,7 @@ async function loadAdminAI() {
 	try {
 		const response = previewMode ? { data: { apiUrl: "", keyConfigured: false, model: "", enabled: false, prompt: "Ты — ИИ-помощник поддержки VPN. Представься, помогай с подключением. Не меняй баланс и подписки. По просьбе клиента или при затруднении позови администратора.", defaultPrompt: "Ты — ИИ-помощник поддержки VPN. Представься, помогай с подключением. Не меняй баланс и подписки. По просьбе клиента или при затруднении позови администратора." } } : await post("/api/mini-app/admin/ai/settings", {});
 		state.adminAI.draft = { ...response.data, apiKey: "" };
+		state.adminAI.dirty = false;
 	} catch (error) { state.adminAI.error = error?.message || "Не удалось загрузить настройки ИИ"; showToast(state.adminAI.error, "danger"); }
 	finally { state.adminAI.busy = ""; if (state.adminSection === "ai") render({ preserveScroll: true }); }
 }
@@ -6704,6 +6708,7 @@ async function checkAdminAI() {
 		const response = previewMode ? { data: { apiUrl: ai.draft.apiUrl, models: ["claude-opus", "gemini-pro", "gpt-mini", "gpt-pro"] } } : await post("/api/mini-app/admin/ai/models", { apiUrl: ai.draft.apiUrl, apiKey: ai.draft.apiKey });
 		ai.models = response.data.models || []; ai.draft.apiUrl = response.data.apiUrl; ai.verified = true;
 		if (!ai.models.includes(ai.draft.model)) ai.draft.model = "";
+		ai.dirty = true;
 		showToast(`Подключение проверено · моделей: ${ai.models.length}`, "success");
 	} catch (error) { ai.models = []; ai.error = error?.message || "Не удалось проверить подключение"; }
 	finally { ai.busy = ""; if (state.adminSection === "ai") render({ preserveScroll: true }); }
@@ -6717,6 +6722,7 @@ async function saveAdminAI() {
 	try {
 		const response = previewMode ? { data: { ...ai.draft, keyConfigured: Boolean(ai.draft.apiKey || ai.draft.keyConfigured) } } : await post("/api/mini-app/admin/ai/update", { apiUrl: ai.draft.apiUrl, apiKey: ai.draft.apiKey, model: ai.draft.model, prompt: ai.draft.prompt, handoffAfter: Number(ai.draft.handoffAfter || 4), enabled: ai.draft.enabled });
 		ai.draft = { ...response.data, apiKey: "" };
+		ai.dirty = false;
 		showToast("Настройки ИИ сохранены", "success");
 	} catch (error) { ai.error = error?.message || "Не удалось сохранить настройки"; }
 	finally { ai.busy = ""; if (state.adminSection === "ai") render({ preserveScroll: true }); }
@@ -11865,11 +11871,13 @@ function bindRootActions() {
 		if (action === "admin-ai-load") return await loadAdminAI();
 		if (action === "admin-ai-save") return await saveAdminAI();
 		if (action === "admin-ai-model") {
-			if (!state.adminAI.busy && state.adminAI.models.includes(value)) { state.adminAI.draft.model = value; render({ preserveScroll: true }); }
+			if (!state.adminAI.busy && state.adminAI.models.includes(value)) { state.adminAI.draft.model = value; state.adminAI.dirty = true; render({ preserveScroll: true }); }
 			return;
 		}
 		if (action === "admin-ai-reset") {
+			if (!state.adminAI.draft || state.adminAI.busy) return;
 			state.adminAI.draft.prompt = state.adminAI.draft.defaultPrompt;
+			state.adminAI.dirty = true;
 			render({ preserveScroll: true }); return;
 		}
 			if (action === "admin-finance-period-toggle" || action === "admin-analytics-period-toggle") {
@@ -11946,6 +11954,7 @@ function bindRootActions() {
 			if (action === "admin-cancel-settings") {
 				if (adminEditorSaveState().busy) return;
 				if (state.adminSection === "moynalog") delete state.adminIntegrationDrafts.moynalog;
+				else if (state.adminSection === "ai") state.adminAI = { draft: null, models: [], verified: false, busy: "", error: "", dirty: false };
 				else syncAdminSettingsDraft(true);
 				return closeAdminSection();
 			}
@@ -12548,6 +12557,8 @@ function bindRootActions() {
 			if (!state.adminAI.draft || state.adminAI.busy) return;
 			if (field === "enabled") { void toggleAdminAI(target.checked); return; }
 			state.adminAI.draft[field] = field === "enabled" ? target.checked : String(target.value || "");
+			state.adminAI.dirty = true;
+			syncAdminSaveBarDOM();
 			if (field === "apiUrl" || field === "apiKey") {
 				state.adminAI.verified = false; state.adminAI.models = []; state.adminAI.error = "";
 				const modelsDOM = app.querySelector(".admin-ai__models");
@@ -13116,6 +13127,7 @@ function applyAdminAppearancePreset(id) {
 }
 
 async function saveAdminSettings() {
+	if (state.adminSection === "ai") return await saveAdminAI();
 	if (state.adminSection === "moynalog") return await saveAdminIntegration("moynalog");
 	if (adminBackgroundBusy) return;
 	if (!state.adminSettingsDraft || state.adminBusy) return;
