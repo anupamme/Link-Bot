@@ -225,7 +225,7 @@
   padding: 4px;
   border: 1px solid var(--line-soft);
   border-radius: 10px;
-  background: var(--surface-soft);
+  background: var(--surface);
 }
 .appearance-tabs > button {
   width: 100%;
@@ -254,7 +254,23 @@
   padding: 16px;
   border: 1px solid var(--line-soft);
   border-radius: 10px;
-  background: var(--surface-soft);
+  background: var(--surface);
+}
+/* Editor panes follow the cabinet card palette, including background choices.
+   Their previews keep the colors of the background being demonstrated. */
+.appearance-theme .admin-background-option {
+  background: var(--surface);
+  color: var(--text);
+}
+.appearance-theme .admin-background-option__copy strong {
+  color: var(--text);
+}
+.appearance-theme .admin-background-option__copy small {
+  color: var(--muted);
+}
+/* A selected tab is a tint within its glass pane, not a second opaque layer. */
+:root[data-glass="on"] .surface-tabs > button[aria-selected="true"] {
+  background: color-mix(in srgb, var(--text) 7%, var(--glass-background));
 }
 .appearance-settings .surface-card h3 {
   margin: 0;

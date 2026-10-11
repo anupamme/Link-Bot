@@ -13192,6 +13192,10 @@ body.is-layout-editing .layout-editor-grid { background: none; }
   .server-summary-panel, .review-card, .review-detail__comment, .login-method-card,
   .media-empty-card, .empty-design-card, .partner-application-card,
   .admin-users__list, .admin-user-subscriptions__list, .admin-partner-entry,
+  .appearance-tabs, .surface-settings .surface-card,
+  .appearance-theme > .admin-editor__section,
+  .appearance-theme > .admin-toggle-list, .appearance-theme .admin-appearance-group,
+  .appearance-theme .admin-background-option,
   .modal__sheet, .desktop-sidebar, .browser-auth,
   .subscription-switcher__menu, .notification-popover
 ) {
@@ -13272,7 +13276,7 @@ body.is-layout-editing .layout-editor-grid { background: none; }
   background: color-mix(in srgb, var(--text) 7%, transparent);
 }
 
-:root[data-glass="on"] :where(.pricing-card.selected, .pay-row.selected, .platform-btn.selected, .tab.active, .segment.active) {
+:root[data-glass="on"] :where(.pricing-card.selected, .pay-row.selected, .platform-btn.selected, .tab.active, .segment.active, .appearance-theme .admin-background-option.is-selected) {
   border-color: var(--accent) !important;
 }
 
@@ -13875,6 +13879,9 @@ body.is-layout-editing .layout-editor-grid { background: none; }
   .admin-status__section, .admin-status__error, .admin-user-direct,
   .admin-settings-search__field, .admin-settings-search__results,
   .admin-settings-search__empty, .admin-background-option,
+  .appearance-tabs, .surface-settings .surface-card,
+  .appearance-theme > .admin-editor__section,
+  .appearance-theme > .admin-toggle-list, .appearance-theme .admin-appearance-group,
   .modal__sheet, .desktop-sidebar, .browser-auth, .bottom-nav,
   .subscription-switcher__menu, .notification-popover, .runtime-layout-item--framed,
   .btn, .sub-pill, .header__btn, .chip, .tab, .segment, .tabs,
