@@ -904,31 +904,11 @@ select:focus-visible {
 }
 
 .admin-subpage { display: grid; gap: 18px; }
-.admin-subpage-intro {
-	display: grid;
-	grid-template-columns: 42px minmax(0, 1fr);
-	gap: 12px;
-	align-items: start;
-	padding-bottom: 16px;
-	border-bottom: 1px solid var(--line);
-}
-.admin-subpage-intro > span {
-	width: 42px;
-	height: 42px;
-	display: grid;
-	place-items: center;
-	border: 1px solid var(--line);
-	border-radius: 8px;
-	background: var(--control-bg);
-}
-.admin-subpage-intro svg { width: 20px; height: 20px; }
-.admin-subpage-intro h3 { margin: 2px 0 4px; font-size: 13px; }
-.admin-subpage-intro p,
 .admin-subpage-client__hint { margin: 0; color: var(--muted); font-size: 9px; line-height: 1.5; }
 .admin-subpage-builtins { display: grid; gap: 8px; }
 .admin-subpage-builtins > strong { color: var(--muted); font-size: 9px; font-weight: 800; letter-spacing: .06em; text-transform: uppercase; }
 .admin-subpage-builtins > div { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
-.admin-subpage-builtins__client { min-height: 46px; display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 0 12px; border: 1px solid var(--line); border-radius: 8px; background: color-mix(in srgb, var(--surface) 82%, transparent); color: var(--text); font: inherit; font-size: 11px; font-weight: 800; }
+.admin-subpage-builtins__client { min-height: 46px; display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 0 12px; border: 1px solid var(--line); border-radius: 12px; background: var(--surface); color: var(--text); font: inherit; font-size: 11px; font-weight: 800; }
 .admin-subpage-builtins__client svg { width: 17px; height: 17px; color: var(--muted); }
 .admin-subpage-builtins__client.is-priority { border-color: var(--accent); }
 .admin-subpage-builtins__client.is-priority svg { color: var(--accent); }
@@ -938,8 +918,8 @@ select:focus-visible {
 	gap: 14px;
 	padding: 15px;
 	border: 1px solid var(--line);
-	border-radius: 8px;
-	background: color-mix(in srgb, var(--surface) 82%, transparent);
+	border-radius: 16px;
+	background: var(--surface);
 }
 .admin-subpage-client__header { min-height: 44px; display: flex; align-items: center; justify-content: space-between; gap: 12px; }
 .admin-subpage-client__header > div:first-child { min-width: 0; display: flex; align-items: center; gap: 9px; }
@@ -952,9 +932,9 @@ select:focus-visible {
 	display: grid;
 	place-items: center;
 	border: 1px solid var(--line-soft);
-	border-radius: 6px;
+	border-radius: 12px;
 	color: var(--text);
-	background: transparent;
+	background: var(--surface);
 }
 .admin-subpage-client__actions button.is-danger { color: var(--danger); }
 .admin-subpage-client__actions .admin-subpage-priority.is-active { border-color: var(--accent); color: var(--accent); }
@@ -971,8 +951,8 @@ select:focus-visible {
 	align-items: center;
 	gap: 8px;
 	border: 1px solid var(--line-soft);
-	border-radius: 6px;
-	background: var(--control-bg);
+	border-radius: 12px;
+	background: var(--surface);
 	font-size: 9px;
 }
 .admin-subpage-platforms input { width: 16px; height: 16px; accent-color: var(--accent); }
@@ -984,15 +964,23 @@ select:focus-visible {
 	justify-content: center;
 	gap: 8px;
 	border: 1px solid var(--line);
-	border-radius: 7px;
+	border-radius: 12px;
 	color: var(--text);
-	background: var(--control-bg);
+	background: var(--surface);
 	font: inherit;
 	font-size: 10px;
 	font-weight: 800;
 }
 .admin-subpage-add svg { width: 16px; height: 16px; }
 .admin-subpage :where(button, input, select):focus-visible { outline: 2px solid var(--text); outline-offset: 2px; }
+.admin-subpage .admin-field__control { min-height: 44px; padding: 12px; border-radius: 12px; color: var(--text); background: var(--surface); }
+.admin-subpage .admin-toggle { min-height: 48px; padding: 12px; border: 1px solid var(--line-soft); border-radius: 12px; background: var(--surface); }
+.admin-subpage .admin-toggle-list { border: 0; }
+.admin-subpage-client__toggles { grid-template-columns: 1fr; }
+@media (max-width: 520px) {
+  .admin-subpage-client__header { flex-wrap: wrap; }
+  .admin-subpage-client__actions { flex: 0 0 auto; }
+}
 
 .admin-color-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; margin-top: 12px; }
 .admin-color-field { min-height: 52px; padding: 0; overflow: hidden; display: flex; align-items: stretch; gap: 0; border: 1px solid var(--line-soft); border-radius: 8px; background: var(--control-bg); color: var(--button-text); }
@@ -14302,3 +14290,16 @@ body.is-layout-editing .layout-editor-grid { background: none; }
 
 /* Editing text never exposes a manual resize grip, including portalled forms. */
 :root textarea { resize: none !important; }
+
+/* Sub Page controls share the configured cabinet card material. */
+:root[data-glass="on"] .admin-subpage :is(
+  .admin-subpage-client, .admin-field__control, .admin-localization-select,
+  .admin-subpage-builtins__client, .admin-subpage-client__actions button,
+  .admin-subpage-platforms label, .admin-subpage-add, .admin-toggle
+) {
+  background: var(--glass-background); background-image: var(--glass-texture);
+  background-size: 128px 128px, 100% 100%; border-color: var(--glass-border);
+  box-shadow: var(--glass-surface-shadow); backdrop-filter: var(--glass-backdrop);
+  -webkit-backdrop-filter: var(--glass-backdrop);
+}
+:root[data-glass="on"] .admin-subpage :is(.admin-subpage-builtins__client.is-priority, .admin-subpage-priority.is-active) { border-color: var(--accent); }
