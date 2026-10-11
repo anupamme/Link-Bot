@@ -15,6 +15,7 @@ import { reviewRewardDraft, reviewRewardsFromDraft, reviewRewardSummary } from "
 
 import { syncTelegramLayout } from "./telegram-layout.mjs";
 import { renderSMTPSettings } from "./admin-smtp.mjs";
+import { mountLocalizationSelects, closeLocalizationMenu } from "./localization-select.mjs";
 import { syncCustomBackground, probeBackground, draggedPosition } from "./custom-background.mjs";
 import { DEFAULT_BACKGROUND_MOTION, presetBackgroundColors } from "./background-palette.mjs";
 import {applyCustomCursor,cursorValues} from "./custom-cursor.mjs";
@@ -4902,6 +4903,7 @@ function mountSwitchSelections(previous = new Map()) {
 }
 
 function render({ preserveScroll = true, scrollTop = null, preserveInteraction = false, textTransitionMode = "content" } = {}) {
+  closeLocalizationMenu();
   normalizeAppearanceSection();
 	const switchSelections = captureSwitchSelections();
 	const bottomNavSelection = captureBottomNavSelection();
@@ -5032,6 +5034,7 @@ function render({ preserveScroll = true, scrollTop = null, preserveInteraction =
 	lastBottomDockMode = dockMode;
   if (!consoleActive && state.currentPage === "admin" && state.adminSection === "finance") void mountFinanceCharts(app);
   bindRootActions();
+  if (!consoleActive) mountLocalizationSelects(app);
   mountAdminContentTabs();
   restoreScrollPosition(nextScrollTop);
 	mountRuntimeLayout();
@@ -6727,15 +6730,13 @@ function renderAdminLocalizationPage() {
 	const localization = state.adminSettingsDraft?.localization || { language: "ru", fontFamily: "auto", fontFamilyRu: "montserrat", fontFamilyEn: "inter" };
 	const title = localizedText("Язык и шрифт", "Language and font", "زبان و فونت");
 	const languageLabel = localizedText("Язык бота и язык Mini App по умолчанию", "Bot and default Mini App language", "زبان پیش‌فرض ربات و Mini App");
-	const hint = localizedText("Язык бота задаётся здесь. Пользователь может изменить язык Mini App в профиле.", "Set the bot language here. Users can switch their Mini App language in Profile.", "زبان ربات را اینجا تنظیم کنید. کاربران می‌توانند زبان Mini App را در پروفایل تغییر دهند.");
-	const fontHint = localizedText("Для фарси автоматически используется Vazir. Шрифты русского и английского настраиваются отдельно.", "Persian uses Vazir automatically. Russian and English fonts are configured separately.", "برای فارسی از Vazir استفاده می‌شود. فونت روسی و انگلیسی جداگانه تنظیم می‌شوند.");
 	const fontSelect = (path, current, options, label) => `<label class="admin-field"><span>${escapeHtml(label)}</span><select class="admin-field__control" data-setting-path="${path}" data-setting-type="text">${options.map(([value, name]) => `<option value="${value}" ${current === value ? "selected" : ""}>${escapeHtml(name)}</option>`).join("")}</select></label>`;
-	return renderAdminEditorPage(title, `<section class="admin-editor__section admin-localization"><p class="admin-localization__hint">${escapeHtml(hint)}</p><div class="admin-editor__grid">
+	return renderAdminEditorPage(title, `<section class="admin-editor__section admin-localization"><div class="admin-editor__grid">
 		<label class="admin-field"><span>${escapeHtml(languageLabel)}</span><select class="admin-field__control" data-setting-path="localization.language" data-setting-type="text"><option value="ru" ${localization.language === "ru" ? "selected" : ""}>Русский</option><option value="en" ${localization.language === "en" ? "selected" : ""}>English</option><option value="fa" ${localization.language === "fa" ? "selected" : ""}>فارسی</option></select></label>
 		${fontSelect("localization.fontFamilyRu", localization.fontFamilyRu || "montserrat", [["montserrat", "Montserrat"], ["golos", "Golos Text"], ["rubik", "Rubik"], ["manrope", "Manrope"], ["onest", "Onest"]], localizedText("Шрифт для русского", "Font for Russian", "فونت روسی"))}
 		${fontSelect("localization.fontFamilyEn", localization.fontFamilyEn || "inter", [["inter", "Inter"], ["dmsans", "DM Sans"], ["jakarta", "Plus Jakarta Sans"], ["outfit", "Outfit"], ["spacegrotesk", "Space Grotesk"]], localizedText("Шрифт для английского", "Font for English", "فونت انگلیسی"))}
 		<label class="admin-field"><span>${escapeHtml(localizedText("Шрифт для фарси", "Font for Persian", "فونت فارسی"))}</span><select class="admin-field__control" data-setting-path="localization.fontFamily" data-setting-type="text"><option value="auto" ${localization.fontFamily === "auto" ? "selected" : ""}>${escapeHtml(localizedText("Автоматически", "Automatic", "خودکار"))}</option><option value="montserrat" ${localization.fontFamily === "montserrat" ? "selected" : ""}>Montserrat</option><option value="vazir" ${localization.fontFamily === "vazir" ? "selected" : ""}>Vazir</option></select></label>
-	</div><div class="admin-localization__previews"><div class="admin-localization__preview" data-preview-font-language="ru" data-font="${escapeAttribute(localization.fontFamilyRu || "montserrat")}"><small>Русский</small><strong>Красивый и быстрый интернет</strong><span>Аа Бб Вв Гг Дд · 1234567890</span></div><div class="admin-localization__preview" data-preview-font-language="en" data-font="${escapeAttribute(localization.fontFamilyEn || "inter")}"><small>English</small><strong>Beautiful and fast internet</strong><span>Aa Bb Cc Dd Ee · 1234567890</span></div></div><p class="admin-localization__font-hint">${escapeHtml(fontHint)}</p></section>`);
+	</div><div class="admin-localization__previews"><div class="admin-localization__preview" data-preview-font-language="ru" data-font="${escapeAttribute(localization.fontFamilyRu || "montserrat")}"><small>Русский</small><strong>Красивый и быстрый интернет</strong><span>Аа Бб Вв Гг Дд · 1234567890</span></div><div class="admin-localization__preview" data-preview-font-language="en" data-font="${escapeAttribute(localization.fontFamilyEn || "inter")}"><small>English</small><strong>Beautiful and fast internet</strong><span>Aa Bb Cc Dd Ee · 1234567890</span></div></div></section>`);
 }
 
 function renderAdminMenuGroup(label, items) {
