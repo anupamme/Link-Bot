@@ -73,6 +73,8 @@ func (c *Client) WebHookHandler() http.Handler {
 			return
 		}
 
+		slog.Info("webhook: signature verified", "event", wh.Name, "telegram_id", wh.Payload.TelegramUserID)
+
 		switch wh.Name {
 		case NewSubscription:
 			err := c.newSubscriptionHandler(ctx, wh)
@@ -81,6 +83,7 @@ func (c *Client) WebHookHandler() http.Handler {
 				http.Error(w, "internal server error", http.StatusInternalServerError)
 				return
 			}
+			slog.Info("webhook: new subscription processed", "telegram_id", wh.Payload.TelegramUserID, "period", wh.Payload.Period, "amount", wh.Payload.Amount)
 		case CancelledSubscription:
 			err := c.cancelSubscriptionHandler(ctx, wh)
 			if errors.Is(err, payment.ErrCustomerNotFound) {
@@ -93,6 +96,7 @@ func (c *Client) WebHookHandler() http.Handler {
 				http.Error(w, "internal server error", http.StatusInternalServerError)
 				return
 			}
+			slog.Info("webhook: subscription cancelled", "telegram_id", wh.Payload.TelegramUserID)
 		case TestHook:
 			slog.Info("Tribute webhook working")
 		}
